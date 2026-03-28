@@ -1,0 +1,22 @@
+{
+  "version": "1.0.0",
+  "name": "Campaign Data",
+  "description": "ICF-SL Campaign Data Download Hub — Sierra Leone NMCP",
+  "appType": "DASHBOARD_WIDGET",
+  "launch_path": "index.html",
+  "icons": {
+    "16": "icons/icon-16.png",
+    "48": "icons/icon-48.png",
+    "128": "icons/icon-128.png"
+  },
+  "developer": {
+    "name": "Informatics Consultancy Firm Sierra Leone (ICF-SL)",
+    "url": "https://icf-sl.com"
+  },
+  "default_locale": "en",
+  "activities": {
+    "dhis": {
+      "href": "*"
+    }
+  }
+}

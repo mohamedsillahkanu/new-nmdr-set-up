@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NMDR Metadata Import — ICF-SL</title>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{--navy:#004080;--navy-lt:#0056b3;--gold:#ffc107;--gold-dk:#e0a800;--white:#fff;--bg:#f0f4f8;--border:#cdd8e3;--muted:#6c7a89;--green:#28a745;--red:#dc3545;--orange:#fd7e14}
+body{font-family:'Oswald',Arial,sans-serif;background:var(--bg);color:#111;font-weight:500;min-height:100vh}
+.ph{background:var(--navy);color:var(--white);padding:16px 24px;text-align:center}
+.ph-logos{display:flex;justify-content:center;gap:18px;margin-bottom:10px}
+.ph-lb{background:var(--white);border-radius:6px;padding:7px}
+.ph-lb img{width:68px;height:auto}
+.ph h3{font-size:12px;font-weight:700;letter-spacing:1px;margin-bottom:2px}
+.ph .tag{font-size:10px;font-style:italic;opacity:.85;margin-bottom:10px}
+.ph h1{font-size:20px;font-weight:700;letter-spacing:1px;margin-bottom:4px}
+.ph .sub{font-size:12px;opacity:.9}
+.app-badge{display:inline-block;background:#e7f3ff;color:var(--navy);border:2px solid #b3d4f7;border-radius:20px;padding:3px 14px;font-size:11px;font-weight:700;letter-spacing:.5px;margin-top:8px}
+.wrap{max-width:1000px;margin:0 auto;padding:18px}
+.card{background:var(--white);border:4px double var(--navy);border-radius:8px;padding:20px;margin-bottom:16px}
+.card-title{font-size:14px;font-weight:700;color:var(--navy);margin-bottom:14px;display:flex;align-items:center;gap:8px;padding-bottom:10px;border-bottom:2px solid var(--border)}
+.card-title .icon{background:var(--navy);color:var(--white);width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0}
+.fg{margin-bottom:13px}
+.fl{display:block;color:var(--navy);font-size:11px;font-weight:700;margin-bottom:5px;text-transform:uppercase;letter-spacing:.5px}
+.fi,.fs{width:100%;padding:9px 12px;border:2px solid var(--navy);border-radius:6px;font-size:13px;font-family:'Oswald',Arial,sans-serif;font-weight:500;color:#000;background:var(--white);transition:border-color .2s}
+.fi:focus,.fs:focus{outline:none;border-color:var(--navy-lt);box-shadow:0 0 0 3px rgba(0,64,128,.1)}
+.fr2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.fr3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+.btn{padding:9px 16px;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;text-transform:uppercase;letter-spacing:.5px;font-family:'Oswald',Arial,sans-serif;transition:all .2s;border:2px solid;display:inline-flex;align-items:center;gap:6px}
+.b-navy{background:var(--navy);color:var(--white);border-color:var(--navy)}.b-navy:hover{background:var(--navy-lt)}
+.b-gold{background:var(--gold);color:#000;border-color:var(--gold)}.b-gold:hover{background:var(--gold-dk)}
+.b-green{background:var(--green);color:var(--white);border-color:var(--green)}.b-green:hover{background:#218838}
+.b-out{background:var(--white);color:var(--navy);border-color:var(--navy)}.b-out:hover{background:var(--navy);color:var(--white)}
+.b-sm{padding:5px 11px;font-size:11px}
+.btn:disabled{opacity:.65;cursor:wait}
+@keyframes spin{to{transform:rotate(360deg)}}
+.btn:disabled::after{content:'';display:inline-block;width:10px;height:10px;border:2px solid currentColor;border-top-color:transparent;border-radius:50%;animation:spin .8s linear infinite}
+.drop-zone{border:3px dashed var(--border);border-radius:8px;padding:32px;text-align:center;cursor:pointer;transition:all .2s;margin-bottom:14px}
+.drop-zone:hover,.drop-zone.over{border-color:var(--navy);background:#e7f3ff}
+.drop-zone .dz-icon{font-size:42px;margin-bottom:10px}
+.drop-zone .dz-text{font-size:13px;color:var(--muted);font-weight:400}
+.drop-zone .dz-text strong{color:var(--navy);font-weight:700}
+.file-info{background:#f8f9fa;border:2px solid var(--border);border-radius:6px;padding:12px 16px;display:flex;align-items:center;gap:12px;margin-bottom:14px;display:none}
+.file-info .fi-icon{font-size:26px}
+.file-info .fi-name{flex:1;font-size:13px;font-weight:600}
+.file-info .fi-size{font-size:11px;color:var(--muted)}
+.mode-row{display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap}
+.mode-btn{flex:1;padding:10px 8px;border:2px solid var(--border);border-radius:6px;text-align:center;cursor:pointer;font-size:12px;font-weight:700;transition:all .2s;text-transform:uppercase;letter-spacing:.5px;font-family:'Oswald',sans-serif;min-width:100px}
+.mode-btn:hover{border-color:var(--navy);background:#e7f3ff}
+.mode-btn.on{background:var(--navy);color:var(--white);border-color:var(--navy)}
+.stats-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:14px}
+.stat-box{background:#f8f9fa;border:2px solid var(--border);border-radius:6px;padding:12px;text-align:center}
+.stat-box .sv{font-size:24px;font-weight:700}
+.stat-box .sl{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-top:3px}
+.stat-box.created .sv{color:var(--green)}
+.stat-box.updated .sv{color:var(--navy)}
+.stat-box.ignored .sv{color:var(--orange)}
+.stat-box.deleted .sv{color:var(--red)}
+.stat-box.total .sv{color:var(--navy)}
+.prog-s{display:none;background:#f8f9fa;border:2px solid var(--navy);border-radius:8px;padding:14px;margin-top:12px}
+.prog-s.on{display:block}
+.pbar{height:24px;background:#e9ecef;border-radius:6px;overflow:hidden;border:2px solid var(--navy);margin-bottom:10px}
+.pfill{height:100%;background:linear-gradient(90deg,var(--navy),var(--navy-lt));transition:width .3s;display:flex;align-items:center;justify-content:center;color:var(--white);font-size:11px;font-weight:700;min-width:40px}
+.logc{max-height:300px;overflow-y:auto;background:#1a1a2e;border-radius:6px;padding:10px;font-family:'Courier New',monospace;font-size:11px}
+.le{padding:2px 0;border-bottom:1px solid #2a2a3e}
+.le.info{color:#17a2b8}.le.success{color:#28a745}.le.error{color:#dc3545}.le.warning{color:#ffc107}
+.tr-table{width:100%;border-collapse:collapse;font-size:11px;margin-top:12px}
+.tr-table th{background:var(--navy);color:var(--white);padding:7px 10px;text-align:left;font-size:10px;letter-spacing:.5px}
+.tr-table td{padding:7px 10px;border-bottom:1px solid var(--border)}
+.tr-table tr:hover td{background:#e7f3ff}
+.badge{display:inline-block;padding:1px 7px;border-radius:10px;font-size:10px;font-weight:700}
+.badge.ok{background:#d4edda;color:#155724}
+.badge.warn{background:#fff3cd;color:#856404}
+.badge.err{background:#f8d7da;color:#721c24}
+.ib{background:#fff3cd;border:2px solid var(--gold);border-radius:6px;padding:10px 14px;margin-bottom:14px;font-size:12px;color:#856404}
+.ib.blue{background:#e7f3ff;border-color:var(--navy);color:var(--navy)}
+.ntf{position:fixed;top:20px;left:50%;transform:translateX(-50%);padding:12px 24px;border-radius:8px;font-weight:700;z-index:2000;display:none;box-shadow:0 4px 16px rgba(0,0,0,.2);font-size:13px}
+.ntf.s{background:#d4edda;color:#155724;border:2px solid var(--green);display:block}
+.ntf.e{background:#f8d7da;color:#721c24;border:2px solid var(--red);display:block}
+.ntf.i{background:#e7f3ff;color:var(--navy);border:2px solid var(--navy);display:block}
+.pf{background:var(--navy);color:var(--white);padding:14px 24px;text-align:center;font-size:11px;line-height:1.8;border-radius:0 0 8px 8px}
+::-webkit-scrollbar{width:6px;height:6px}
+::-webkit-scrollbar-track{background:#f8f9fa}
+::-webkit-scrollbar-thumb{background:var(--navy);border-radius:4px}
+@media(max-width:700px){.fr2,.fr3,.stats-grid{grid-template-columns:1fr 1fr}.mode-row{flex-direction:column}}
+</style>
+</head>
+<body>
+
+<div class="ph">
+  <div class="ph-logos">
+    <div class="ph-lb"><img src="https://github.com/mohamedsillahkanu/gdp-dashboard-2/raw/6c7463b0d5c3be150aafae695a4bcbbd8aeb1499/ICF-SL.jpg" alt="ICF-SL"></div>
+  </div>
+  <h3>Informatics Consultancy Firm-Sierra Leone (ICF-SL)</h3>
+  <p class="tag">Driving Data-Driven Solutions for Health and Development</p>
+  <h1>📦 NMDR METADATA IMPORT</h1>
+  <p class="sub">Import DHIS2 metadata in dependency order via API</p>
+  <div class="app-badge">APP 1 OF 2 — METADATA</div>
+</div>
+
+<div class="wrap">
+
+  <!-- CONNECTION -->
+  <div class="card">
+    <div class="card-title"><span class="icon">🔗</span> Target DHIS2 Instance</div>
+    <div class="fr3">
+      <div class="fg"><label class="fl">DHIS2 URL</label><input class="fi" id="tgtUrl" value="http://nmdr:8080"></div>
+      <div class="fg"><label class="fl">Username</label><input class="fi" id="tgtUser" value="admin"></div>
+      <div class="fg"><label class="fl">Password</label><input class="fi" id="tgtPass" type="password" value="district"></div>
+    </div>
+    <div style="display:flex;gap:10px;align-items:center;">
+      <button class="btn b-navy b-sm" onclick="testConn()">🔌 Test Connection</button>
+      <span id="connStatus" style="font-size:12px;color:var(--muted);"></span>
+    </div>
+  </div>
+
+  <!-- METADATA IMPORT -->
+  <div class="card">
+    <div class="card-title"><span class="icon">📦</span> Metadata Import</div>
+    <div class="ib blue">Drop the <strong>nmdr_metadata_*.json</strong> file here. Imported in dependency order — 30+ rounds, each object type separately.</div>
+
+    <div class="drop-zone" id="metaDZ" onclick="document.getElementById('metaFile').click()">
+      <div class="dz-icon">📦</div>
+      <div class="dz-text"><strong>Click or drag metadata JSON</strong><br>nmdr_metadata_YYYY-MM-DD.json</div>
+      <input type="file" id="metaFile" accept=".json" style="display:none" onchange="loadMetaFile(event)">
+    </div>
+    <div class="file-info" id="metaFileInfo">
+      <span class="fi-icon">📦</span>
+      <span class="fi-name" id="metaFileName"></span>
+      <span class="fi-size" id="metaFileSize"></span>
+    </div>
+
+    <label class="fl" style="margin-bottom:8px;">Import Mode</label>
+    <div class="mode-row">
+      <div class="mode-btn on" id="mm-dry" onclick="setMetaMode('VALIDATE_ONLY')">🔍 Dry Run</div>
+      <div class="mode-btn" id="mm-commit" onclick="setMetaMode('COMMIT')">✅ Commit</div>
+    </div>
+
+
+
+    <div style="display:flex;gap:10px;flex-wrap:wrap;">
+      <button class="btn b-gold" onclick="importMeta()" id="metaImportBtn">⬆ Import Metadata</button>
+      <button class="btn b-out b-sm" onclick="previewMeta()" id="metaPreviewBtn">👁 Preview Contents</button>
+    </div>
+
+    <div class="prog-s" id="metaProg">
+      <div class="pbar"><div class="pfill" id="metaFill" style="width:0%">0%</div></div>
+      <div class="logc" id="metaLog"></div>
+    </div>
+
+    <div id="metaStatsWrap" style="display:none;margin-top:14px;">
+      <div class="stats-grid">
+        <div class="stat-box created"><div class="sv" id="mCreated">0</div><div class="sl">Created</div></div>
+        <div class="stat-box updated"><div class="sv" id="mUpdated">0</div><div class="sl">Updated</div></div>
+        <div class="stat-box ignored"><div class="sv" id="mIgnored">0</div><div class="sl">Ignored</div></div>
+        <div class="stat-box deleted"><div class="sv" id="mErrors">0</div><div class="sl">Errors</div></div>
+        <div class="stat-box total"><div class="sv" id="mRounds">0</div><div class="sl">Rounds</div></div>
+      </div>
+      <div style="overflow-x:auto;">
+        <table class="tr-table" id="typeReportTable">
+          <thead><tr><th>Object Type</th><th>Created</th><th>Updated</th><th>Ignored</th><th>Status</th><th>Errors</th></tr></thead>
+          <tbody id="typeReportBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="pf">
+    <strong>Informatics Consultancy Firm-Sierra Leone (ICF-SL)</strong><br>
+    Driving Data-Driven Solutions for Health and Development<br>
+    <span style="font-size:10px;">© 2025 ICF-SL — NMDR Metadata Import App</span>
+  </div>
+</div>
+
+<div class="ntf" id="ntf"></div>
+
+<script>
+const S={tgt:{url:'http://nmdr:8080',user:'admin',pass:'district'},metaFile:null,metaMode:'VALIDATE_ONLY'};
+
+function ntf(msg,t='i'){const el=document.getElementById('ntf');el.textContent=msg;el.className='ntf '+t;setTimeout(()=>el.className='ntf',5000)}
+function lg(id,msg,t='info'){const c=document.getElementById(id);if(!c)return;const d=document.createElement('div');d.className='le '+t;d.textContent=`[${new Date().toLocaleTimeString()}] ${msg}`;c.appendChild(d);c.scrollTop=c.scrollHeight}
+function sp(id,pct){const el=document.getElementById(id);if(!el)return;el.style.width=pct+'%';el.textContent=Math.round(pct)+'%'}
+function shProg(id){document.getElementById(id).classList.add('on')}
+function getAuth(){return 'Basic '+btoa(S.tgt.user+':'+S.tgt.pass)}
+
+async function tgtReq(path,method='GET',body=null){
+  const url=document.getElementById('tgtUrl').value.trim().replace(/\/$/,'')+path;
+  const opts={method,headers:{'Content-Type':'application/json','Authorization':getAuth()}};
+  if(body)opts.body=JSON.stringify(body);
+  return fetch(url,opts);
+}
+
+async function testConn(){
+  S.tgt.url=document.getElementById('tgtUrl').value.trim().replace(/\/$/,'');
+  S.tgt.user=document.getElementById('tgtUser').value.trim();
+  S.tgt.pass=document.getElementById('tgtPass').value.trim();
+  const btn=document.querySelector('button[onclick="testConn()"]');btn.disabled=true;
+  const status=document.getElementById('connStatus');
+  try{
+    const r=await tgtReq('/api/me.json');
+    if(r.ok){const d=await r.json();status.innerHTML=`<span style="color:var(--green)">✅ Connected as ${d.firstName||''} ${d.surname||''} — ${S.tgt.url}</span>`;ntf('Connected!','s');}
+    else{status.innerHTML=`<span style="color:var(--red)">❌ HTTP ${r.status}</span>`;ntf('Connection failed: HTTP '+r.status,'e');}
+  }catch(e){status.innerHTML=`<span style="color:var(--red)">❌ ${e.message}</span>`;ntf('Error: '+e.message,'e');}
+  finally{btn.disabled=false;}
+}
+
+function loadMetaFile(evt){
+  const file=evt.target.files[0];if(!file)return;
+  S.metaFile=file;
+  document.getElementById('metaFileInfo').style.display='flex';
+  document.getElementById('metaFileName').textContent=file.name;
+  document.getElementById('metaFileSize').textContent=(file.size/1024/1024).toFixed(2)+' MB';
+  ntf('Metadata file loaded: '+file.name,'i');
+}
+
+const metaDZ=document.getElementById('metaDZ');
+metaDZ.addEventListener('dragover',e=>{e.preventDefault();metaDZ.classList.add('over');});
+metaDZ.addEventListener('dragleave',()=>metaDZ.classList.remove('over'));
+metaDZ.addEventListener('drop',e=>{
+  e.preventDefault();metaDZ.classList.remove('over');
+  const file=e.dataTransfer.files[0];if(!file)return;
+  S.metaFile=file;
+  document.getElementById('metaFileInfo').style.display='flex';
+  document.getElementById('metaFileName').textContent=file.name;
+  document.getElementById('metaFileSize').textContent=(file.size/1024/1024).toFixed(2)+' MB';
+  ntf('File loaded: '+file.name,'i');
+});
+
+function setMetaMode(m){
+  S.metaMode=m;
+  document.getElementById('mm-dry').classList.toggle('on',m==='VALIDATE_ONLY');
+  document.getElementById('mm-commit').classList.toggle('on',m==='COMMIT');
+}
+
+async function previewMeta(){
+  if(!S.metaFile){ntf('Load a metadata JSON file first','e');return;}
+  const btn=document.getElementById('metaPreviewBtn');btn.disabled=true;
+  shProg('metaProg');
+  try{
+    const p=JSON.parse(await S.metaFile.text());
+    lg('metaLog','═══════════════════════════════════════','info');
+    lg('metaLog','📦 METADATA FILE CONTENTS','info');
+    lg('metaLog',`  Source: ${p.source||'unknown'}  Exported: ${p.exported||'unknown'}`,'info');
+    lg('metaLog','═══════════════════════════════════════','info');
+    const keys=['attributes','organisationUnitLevels','organisationUnitGroups','organisationUnitGroupSets','organisationUnits',
+      'categoryOptions','categories','categoryCombos','categoryOptionCombos','optionSets','legendSets',
+      'dataElements','dataElementGroups','dataElementGroupSets','indicatorTypes','indicators','indicatorGroups',
+      'validationRules','validationRuleGroups','userGroups','dataSets',
+      'visualizations','maps','eventReports','eventCharts','reportTables','reports','dashboards'];
+    let total=0;
+    keys.forEach(k=>{const arr=p[k]||[];if(arr.length){lg('metaLog',`  ${k}: ${arr.length}`,'success');total+=arr.length;}});
+    lg('metaLog','═══════════════════════════════════════','success');
+    lg('metaLog',`  TOTAL OBJECTS: ${total}`,'success');
+    lg('metaLog','═══════════════════════════════════════','success');
+    ntf('Preview loaded','i');
+  }catch(e){lg('metaLog','ERROR parsing file: '+e.message,'error');}
+  finally{btn.disabled=false;}
+}
+
+async function importMeta(){
+  if(!S.metaFile){ntf('Load a metadata JSON file first','e');return;}
+  S.tgt.url=document.getElementById('tgtUrl').value.trim().replace(/\/$/,'');
+  S.tgt.user=document.getElementById('tgtUser').value.trim();
+  S.tgt.pass=document.getElementById('tgtPass').value.trim();
+  const BATCH=200,DELAY=300;
+  const btn=document.getElementById('metaImportBtn');btn.disabled=true;
+  shProg('metaProg');sp('metaFill',0);
+  document.getElementById('metaStatsWrap').style.display='none';
+  document.getElementById('metaLog').innerHTML='';
+
+  let totCreated=0,totUpdated=0,totIgnored=0,totErrors=0,rounds=0;
+  const typeRows=[];
+
+  const post=async(label,body,pct)=>{
+    if(!body||!Object.values(body).some(v=>Array.isArray(v)&&v.length))return;
+    const url=`/api/metadata.json?importMode=${S.metaMode}&mergeMode=MERGE&identifier=UID&skipSharing=true&async=false`;
+    const r=await tgtReq(url,'POST',body);
+    sp('metaFill',pct);rounds++;
+    if(r.ok||r.status===409){
+      let d={};try{d=await r.json();}catch(e){}
+      const st=d.stats||{};
+      let c=st.created||0,u=st.updated||0,ig=st.ignored||0;
+      // Fallback: DHIS2 sometimes returns empty top-level stats — sum from typeReports instead
+      if(c+u+ig===0&&(d.typeReports||[]).length){
+        d.typeReports.forEach(tr=>{c+=tr.stats?.created||0;u+=tr.stats?.updated||0;ig+=tr.stats?.ignored||0;});
+      }
+      totCreated+=c;totUpdated+=u;totIgnored+=ig;
+      const isWarn=d.status==='WARNING'||r.status===409;
+      const isErr=d.status==='ERROR';
+      const t=isErr?'error':isWarn&&(c+u===0)?'warning':'success';
+      lg('metaLog',`${label}: +${c} created  ~${u} updated  =${ig} ignored  [${d.status||'OK'}]`,t);
+      const errs=(d.typeReports||[]).flatMap(tr=>(tr.objectReports||[]).flatMap(o=>(o.errorReports||[]).map(e=>e.message||e.errorCode||'')));
+      if(errs.length){errs.slice(0,3).forEach(e=>lg('metaLog',`  ⚠ ${e}`.substring(0,180),'warning'));if(isErr)totErrors+=errs.length;}
+      (d.typeReports||[]).forEach(tr=>{
+        if((tr.stats?.created||0)+(tr.stats?.updated||0)+(tr.stats?.ignored||0)>0||isErr){
+          typeRows.push({klass:tr.klass?.split('.')||[tr.klass],c:tr.stats?.created||0,u:tr.stats?.updated||0,ig:tr.stats?.ignored||0,status:d.status,errs:errs.length});
+        }
+      });
+    }else{
+      const txt=await r.text().catch(()=>'');
+      lg('metaLog',`✗ ${label} HTTP ${r.status}: ${txt.substring(0,200)}`,'error');
+      totErrors++;
+    }
+    await new Promise(r=>setTimeout(r,DELAY));
+  };
+
+  try{
+    const p=JSON.parse(await S.metaFile.text());
+    lg('metaLog',`Starting metadata import (${S.metaMode}) from: ${p.source||'file'}`,'info');
+    lg('metaLog','═══════════════════════════════════════','info');
+
+    await post('[1] Attributes',{attributes:p.attributes},3);
+    await post('[2] Legend Sets',{legendSets:p.legendSets},6);
+    await post('[3] Option Sets',{optionSets:p.optionSets},9);
+    await post('[4] Category Options',{categoryOptions:p.categoryOptions},12);
+    await post('[5] Categories',{categories:p.categories},15);
+    await post('[6] Category Combos',{categoryCombos:p.categoryCombos},18);
+    await post('[7] Category Option Combos',{categoryOptionCombos:p.categoryOptionCombos},21);
+    await post('[8] Org Unit Levels',{organisationUnitLevels:p.organisationUnitLevels},23);
+
+    const ougEmpty=(p.organisationUnitGroups||[]).map(g=>({...g,organisationUnits:[]}));
+    await post('[9a] Org Unit Groups (structure)',{organisationUnitGroups:ougEmpty},25);
+    await post('[9b] Org Unit Group Sets',{organisationUnitGroupSets:p.organisationUnitGroupSets},27);
+
+    const ous=(p.organisationUnits||[]).sort((a,b)=>(a.level||1)-(b.level||1));
+    if(ous.length){
+      const maxLv=Math.max(...ous.map(o=>o.level||1));
+      for(let lv=1;lv<=maxLv;lv++){
+        const lvOUs=ous.filter(o=>o.level===lv).map(o=>{const c={...o};delete c.path;delete c.coordinates;if(!c.closedDate)delete c.closedDate;if(!c.code)delete c.code;return c;});
+        if(!lvOUs.length)continue;
+        for(let i=0;i<lvOUs.length;i+=BATCH){
+          const bNum=Math.floor(i/BATCH)+1;
+          const pct=27+Math.round(((lv-1)/maxLv)*20)+Math.round((i/lvOUs.length)*(20/maxLv));
+          await post(`[10] Org Units L${lv} batch ${bNum}`,{organisationUnits:lvOUs.slice(i,i+BATCH)},Math.min(pct,47));
+        }
+      }
+      await post('[10z] Org Unit Groups (members)',{organisationUnitGroups:p.organisationUnitGroups},48);
+    }
+
+    await post('[11] Data Element Group Sets (empty)',{dataElementGroupSets:(p.dataElementGroupSets||[]).map(g=>({...g,dataElementGroups:[]}))},50);
+    await post('[12] Data Elements',{dataElements:p.dataElements},53);
+    await post('[13] Data Element Groups',{dataElementGroups:p.dataElementGroups},56);
+    await post('[14] Data Element Group Sets (members)',{dataElementGroupSets:p.dataElementGroupSets},58);
+    await post('[15] Indicator Types',{indicatorTypes:p.indicatorTypes},60);
+    await post('[16] Indicator Groups (empty)',{indicatorGroups:(p.indicatorGroups||[]).map(g=>({...g,indicators:[]}))},62);
+    await post('[17] Indicators',{indicators:p.indicators},65);
+    await post('[18] Indicator Groups (members)',{indicatorGroups:p.indicatorGroups},67);
+    await post('[19] Indicator Group Sets',{indicatorGroupSets:p.indicatorGroupSets},69);
+    await post('[20] Validation Rule Groups (empty)',{validationRuleGroups:(p.validationRuleGroups||[]).map(g=>({...g,validationRules:[]}))},71);
+    await post('[21] Validation Rules',{validationRules:p.validationRules},73);
+    await post('[22] Validation Rule Groups (members)',{validationRuleGroups:p.validationRuleGroups},75);
+    await post('[23] User Groups',{userGroups:p.userGroups},77);
+    await post('[24] Datasets',{dataSets:p.dataSets},80);
+    await post('[25] Visualizations',{visualizations:p.visualizations},83);
+    await post('[26] Maps',{maps:p.maps},85);
+    await post('[27] Event Reports',{eventReports:p.eventReports},87);
+    await post('[28] Event Charts',{eventCharts:p.eventCharts},89);
+    await post('[29] Report Tables',{reportTables:p.reportTables},91);
+    await post('[30] Reports',{reports:p.reports},93);
+    await post('[31] Dashboards',{dashboards:p.dashboards},97);
+
+    sp('metaFill',100);
+    lg('metaLog','═══════════════════════════════════════','success');
+    lg('metaLog',`✅ IMPORT COMPLETE (${S.metaMode})`,'success');
+    lg('metaLog',`   Created: ${totCreated}  Updated: ${totUpdated}  Ignored: ${totIgnored}  Errors: ${totErrors}  Rounds: ${rounds}`,'success');
+    lg('metaLog','═══════════════════════════════════════','success');
+
+    document.getElementById('mCreated').textContent=totCreated.toLocaleString();
+    document.getElementById('mUpdated').textContent=totUpdated.toLocaleString();
+    document.getElementById('mIgnored').textContent=totIgnored.toLocaleString();
+    document.getElementById('mErrors').textContent=totErrors.toLocaleString();
+    document.getElementById('mRounds').textContent=rounds;
+    document.getElementById('metaStatsWrap').style.display='block';
+
+    const tbody=document.getElementById('typeReportBody');
+    if(typeRows.length){
+      tbody.innerHTML=typeRows.map(r=>{
+        const klass=Array.isArray(r.klass)?r.klass[r.klass.length-1]:r.klass;
+        const status=r.errs>0?'warn':r.status==='OK'?'ok':'warn';
+        return `<tr><td>${klass}</td><td style="color:var(--green)">${r.c}</td><td style="color:var(--navy)">${r.u}</td><td>${r.ig}</td><td><span class="badge ${status}">${r.status||'OK'}</span></td><td style="color:var(--red)">${r.errs||0}</td></tr>`;
+      }).join('');
+    }
+    ntf(S.metaMode==='VALIDATE_ONLY'?`Dry run — ${totCreated} would be created`:`Done — ${totCreated} created, ${totUpdated} updated`,'s');
+  }catch(e){lg('metaLog','ERROR: '+e.message,'error');ntf('Import failed: '+e.message,'e');}
+  finally{btn.disabled=false;}
+}
+</script>
+</body>
+</html>

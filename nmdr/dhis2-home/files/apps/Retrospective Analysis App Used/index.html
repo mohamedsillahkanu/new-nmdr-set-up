@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Retrospective Analysis</title>
+<meta name="description" content="ICF-SL Data Management and Analysis Tools">
+<meta name="theme-color" content="#2c6793">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="RET Analysis">
+<link rel="icon" href="icons/icon-48.png" type="image/png">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+:root {
+  --blue:      #2c6793;
+  --blue-dark: #1e4d6e;
+  --white:     #ffffff;
+  --bg:        #f4f6f8;
+  --surface:   #ffffff;
+  --border:    #d5dde5;
+  --text:      #212934;
+  --muted:     #6c7a89;
+  --chip-bg:   #e8f0f7;
+}
+body { font-family: 'Roboto', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; display: flex; flex-direction: column; }
+
+/* TOPBAR */
+.topbar { background: var(--blue); height: 48px; display: flex; align-items: center; padding: 0 16px; gap: 12px; box-shadow: 0 1px 4px rgba(0,0,0,0.2); position: sticky; top: 0; z-index: 100; flex-shrink: 0; }
+.topbar-logo { width: 32px; height: 32px; background: var(--white); border-radius: 4px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.topbar-logo span { font-size: 11px; font-weight: 900; color: var(--blue); letter-spacing: 0.5px; }
+.topbar-title { color: rgba(255,255,255,0.92); font-size: 15px; font-weight: 500; flex: 1; }
+.topbar-avatar { width: 32px; height: 32px; background: rgba(255,255,255,0.2); border: 2px solid rgba(255,255,255,0.4); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; color: white; }
+
+/* SUBHEADER */
+.subheader { background: var(--surface); border-bottom: 1px solid var(--border); padding: 12px 24px 14px; display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+.subheader-left h1 { font-size: 20px; font-weight: 500; color: var(--text); margin-bottom: 6px; }
+.subheader-meta { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.meta-chip { display: inline-flex; align-items: center; gap: 5px; background: var(--chip-bg); color: var(--blue); font-size: 11px; font-weight: 500; padding: 3px 10px; border-radius: 12px; border: 1px solid rgba(44,103,147,0.2); }
+.count-info { font-size: 11px; color: var(--muted); text-align: right; }
+.count-info strong { color: var(--blue); font-size: 13px; display: block; }
+
+/* MAIN */
+.main { flex: 1; padding: 20px 24px 32px; }
+.section-label { font-size: 11px; font-weight: 500; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); margin-bottom: 14px; display: flex; align-items: center; gap: 10px; }
+.section-label::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+.cards-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
+
+/* CARD */
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: 6px; overflow: hidden; cursor: pointer; transition: box-shadow 0.2s, transform 0.15s, border-color 0.2s; display: flex; flex-direction: column; box-shadow: 0 1px 3px rgba(0,0,0,0.1); animation: cardIn 0.4s ease both; }
+@keyframes cardIn { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:translateY(0)} }
+.card:hover { box-shadow: 0 4px 20px rgba(44,103,147,0.18); border-color: var(--blue); transform: translateY(-2px); }
+.card-stripe { height: 4px; background: var(--blue); }
+.card-body { padding: 16px 18px 14px; flex: 1; display: flex; flex-direction: column; }
+.card-header-row { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 10px; }
+.card-icon { width: 36px; height: 36px; background: var(--chip-bg); border-radius: 6px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.card-icon svg { width: 18px; height: 18px; fill: none; stroke: var(--blue); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.card-title-wrap { flex: 1; }
+.card-num { font-size: 10px; font-weight: 500; color: var(--muted); letter-spacing: 0.5px; margin-bottom: 2px; }
+.card-name { font-size: 14px; font-weight: 500; color: var(--text); line-height: 1.3; }
+.card-desc { font-size: 12px; color: var(--muted); line-height: 1.6; flex: 1; margin-bottom: 14px; }
+.card-footer { display: flex; align-items: center; justify-content: space-between; padding-top: 10px; border-top: 1px solid var(--border); }
+.status-pill { display: inline-flex; align-items: center; gap: 5px; font-size: 10px; font-weight: 500; letter-spacing: 0.5px; text-transform: uppercase; color: var(--muted); }
+.status-dot { width: 6px; height: 6px; border-radius: 50%; background: #ccc; }
+.status-dot.active { background: #28a745; }
+.card-open-btn { display: flex; align-items: center; gap: 4px; font-size: 12px; font-weight: 500; color: var(--blue); background: transparent; border: 1px solid var(--border); border-radius: 4px; padding: 4px 10px; cursor: pointer; font-family: 'Roboto', sans-serif; transition: all 0.15s; }
+.card-open-btn:hover { background: var(--chip-bg); border-color: var(--blue); }
+.card-open-btn svg { width: 12px; height: 12px; fill: none; stroke: var(--blue); stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
+
+/* FOOTER */
+.page-footer { background: var(--surface); border-top: 1px solid var(--border); padding: 12px 24px; display: flex; align-items: center; justify-content: space-between; font-size: 11px; color: var(--muted); flex-wrap: wrap; gap: 8px; }
+.page-footer strong { color: var(--blue); }
+
+/* MODAL */
+.modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1000; }
+.modal-overlay.open { display: flex; animation: overlayIn 0.2s ease; }
+@keyframes overlayIn { from{opacity:0} to{opacity:1} }
+.modal { width: 100%; height: 100%; background: var(--bg); display: flex; flex-direction: column; animation: modalIn 0.25s ease; }
+@keyframes modalIn { from{transform:translateY(20px);opacity:0} to{transform:translateY(0);opacity:1} }
+.modal-topbar { background: var(--blue); height: 48px; display: flex; align-items: center; padding: 0 16px; gap: 12px; flex-shrink: 0; }
+.modal-back { width: 36px; height: 36px; border-radius: 4px; display: flex; align-items: center; justify-content: center; cursor: pointer; border: none; background: transparent; transition: background 0.15s; }
+.modal-back:hover { background: rgba(255,255,255,0.15); }
+.modal-back svg { width: 20px; height: 20px; fill: none; stroke: rgba(255,255,255,0.9); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.modal-topbar-title { color: rgba(255,255,255,0.92); font-size: 15px; font-weight: 500; flex: 1; }
+.modal-subbar { background: var(--surface); border-bottom: 1px solid var(--border); padding: 8px 20px; display: flex; align-items: center; flex-shrink: 0; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+.modal-breadcrumb { font-size: 12px; color: var(--muted); display: flex; align-items: center; gap: 6px; }
+.modal-breadcrumb span { color: var(--text); font-weight: 500; }
+.modal-breadcrumb svg { width: 12px; height: 12px; fill: none; stroke: var(--muted); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.modal-body { flex: 1; overflow: hidden; position: relative; }
+.modal-iframe { width: 100%; height: 100%; border: none; display: none; }
+.state-loading, .state-placeholder { position: absolute; inset: 0; display: none; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 40px; background: var(--bg); }
+.state-loading.visible, .state-placeholder.visible { display: flex; }
+.spinner { width: 40px; height: 40px; border: 3px solid var(--border); border-top-color: var(--blue); border-radius: 50%; animation: spin 0.7s linear infinite; margin-bottom: 14px; }
+@keyframes spin { to{transform:rotate(360deg)} }
+.loading-text { color: var(--blue); font-size: 13px; font-weight: 500; }
+.placeholder-title { color: var(--text); font-size: 16px; font-weight: 500; margin-bottom: 6px; }
+.placeholder-body { color: var(--muted); font-size: 12px; line-height: 1.7; max-width: 360px; }
+.placeholder-body code { background: var(--chip-bg); color: var(--blue); padding: 2px 7px; border-radius: 3px; font-family: monospace; font-size: 11px; }
+
+@media(max-width:768px){ .main{padding:14px 12px 24px} .subheader{padding:10px 14px 12px} .cards-grid{grid-template-columns:1fr} .page-footer{justify-content:center;text-align:center} }
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="topbar-logo"><span>RET</span></div>
+  <div class="topbar-title">Retrospective Analysis &mdash; MPR 2021&ndash;2024</div>
+  <div class="topbar-avatar">NM</div>
+</div>
+
+<!-- SUBHEADER -->
+<div class="subheader">
+  <div class="subheader-left">
+    <h1>Dashboard</h1>
+    <div class="subheader-meta">
+      <div class="meta-chip">2021 &ndash; 2024</div>
+      <div class="meta-chip">Sierra Leone</div>
+      <div class="meta-chip">NMCP</div>
+    </div>
+  </div>
+  <div class="count-info">
+    <strong id="countBadge"></strong>
+    Available Analysis
+  </div>
+</div>
+
+<!-- MAIN -->
+<main class="main">
+  <div class="section-label">Analysis Modules</div>
+  <div class="cards-grid" id="cardsGrid"></div>
+</main>
+
+<!-- FOOTER -->
+<footer class="page-footer">
+  <div>Retrospective Analysis &mdash; <strong>Malaria Program Review (MPR) 2021&ndash;2024</strong></div>
+  <div>Designed &amp; Developed by <strong>Informatics Consultancy Firm (ICF-SL)</strong> &nbsp;|&nbsp; &copy; <span id="footerYear"></span></div>
+</footer>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <div class="modal-topbar">
+      <button class="modal-back" onclick="closeModal()">
+        <svg viewBox="0 0 24 24"><path d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
+      </button>
+      <div class="modal-topbar-title" id="modalTitleText">Analysis</div>
+    </div>
+    <div class="modal-subbar">
+      <div class="modal-breadcrumb">
+        Dashboard
+        <svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg>
+        <span id="modalBreadcrumb">Analysis</span>
+      </div>
+    </div>
+    <div class="modal-body">
+      <div class="state-loading" id="stateLoading"><div class="spinner"></div><div class="loading-text">Loading analysis...</div></div>
+      <div class="state-placeholder visible" id="statePlaceholder">
+        <div class="placeholder-title" id="placeholderTitle">Not Configured</div>
+        <div class="placeholder-body" id="placeholderBody">Set a filename in <code>toolData[n].tool</code>.</div>
+      </div>
+      <iframe class="modal-iframe" id="modalIframe"></iframe>
+    </div>
+  </div>
+</div>
+
+<script>
+  document.getElementById('footerYear').textContent = new Date().getFullYear();
+
+  // ── Add your HTML filenames below ──
+  var toolData = [
+    { id:1, name:"Output Indicators",       desc:"Trend analysis of 15 output indicators across testing, treatment and prevention (2021-2024).", tool:"output.html" },
+    { id:2, name:"Outcome Indicators",      desc:"Analysis of outcome-level malaria programme performance metrics.", tool:"" },
+    { id:3, name:"Impact Indicators",       desc:"Impact-level analysis including incidence, mortality and parasite prevalence.", tool:"" },
+    { id:4, name:"Data Quality Assessment", desc:"HMIS data quality assessment for completeness, consistency and timeliness.", tool:"" },
+    { id:5, name:"Epidemiological Profile", desc:"District-level malaria epidemiology and seasonality patterns.", tool:"" },
+    { id:6, name:"Intervention Coverage",   desc:"Coverage analysis for ITN, IRS, IPTp and case management interventions.", tool:"" }
+  ];
+
+  var chartIcon = '<svg viewBox="0 0 24 24"><path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>';
+  var arrowIcon = '<svg viewBox="0 0 24 24"><path d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>';
+  var has = function(v) { return v && v.trim().length > 0; };
+
+  document.getElementById('cardsGrid').innerHTML = toolData.map(function(t, i) {
+    return '<div class="card" onclick="openTool(' + i + ')" style="animation-delay:' + (i*0.06).toFixed(2) + 's">' +
+      '<div class="card-stripe"></div>' +
+      '<div class="card-body">' +
+        '<div class="card-header-row">' +
+          '<div class="card-icon">' + chartIcon + '</div>' +
+          '<div class="card-title-wrap">' +
+            '<div class="card-num">ANALYSIS ' + String(t.id).padStart(2,'0') + '</div>' +
+            '<div class="card-name">' + t.name + '</div>' +
+          '</div>' +
+        '</div>' +
+        '<div class="card-desc">' + t.desc + '</div>' +
+        '<div class="card-footer">' +
+          '<div class="status-pill"><div class="status-dot ' + (has(t.tool)?'active':'') + '"></div>' + (has(t.tool)?'Ready':'Coming Soon') + '</div>' +
+          '<button class="card-open-btn">' + arrowIcon + ' Open</button>' +
+        '</div>' +
+      '</div>' +
+    '</div>';
+  }).join('');
+
+  document.getElementById('countBadge').textContent = toolData.filter(function(t){ return has(t.tool); }).length + ' / ' + toolData.length;
+
+  var activeIdx = null;
+
+  function openTool(idx) {
+    activeIdx = idx;
+    var t = toolData[idx];
+    document.getElementById('modalTitleText').textContent  = t.name;
+    document.getElementById('modalBreadcrumb').textContent = t.name;
+    document.getElementById('modalOverlay').classList.add('open');
+    document.body.style.overflow = 'hidden';
+    var iframe      = document.getElementById('modalIframe');
+    var loading     = document.getElementById('stateLoading');
+    var placeholder = document.getElementById('statePlaceholder');
+    iframe.style.display = 'none';
+    iframe.src = 'about:blank';
+    loading.classList.remove('visible');
+    placeholder.classList.remove('visible');
+    if (!has(t.tool)) {
+      document.getElementById('placeholderTitle').textContent = t.name + ' — Coming Soon';
+      document.getElementById('placeholderBody').innerHTML    = 'This analysis module has not been configured yet.';
+      placeholder.classList.add('visible');
+      return;
+    }
+    loading.classList.add('visible');
+    iframe.onload = function() {
+      if (iframe.src.endsWith('about:blank')) return;
+      loading.classList.remove('visible');
+      iframe.style.display = 'block';
+    };
+    iframe.onerror = function() {
+      loading.classList.remove('visible');
+      document.getElementById('placeholderTitle').textContent = 'File Not Found';
+      document.getElementById('placeholderBody').innerHTML    = 'Could not load <code>' + t.tool + '</code>.';
+      placeholder.classList.add('visible');
+    };
+    iframe.src = t.tool;
+  }
+
+  function closeModal() {
+    document.getElementById('modalOverlay').classList.remove('open');
+    document.body.style.overflow = '';
+    var f = document.getElementById('modalIframe');
+    f.src = 'about:blank';
+    f.style.display = 'none';
+    activeIdx = null;
+  }
+
+  document.getElementById('modalOverlay').addEventListener('click', function(e){ if(e.target.id==='modalOverlay') closeModal(); });
+  document.addEventListener('keydown', function(e){ if(e.key==='Escape') closeModal(); });
+
+  // ── DHIS2 Dashboard Widget: free height resize ──
+  // Sends content height to DHIS2 parent so the iframe expands
+  // instead of being capped at a fixed height.
+  function notifyParentHeight() {
+    var height = document.documentElement.scrollHeight || document.body.scrollHeight;
+    if (window.parent !== window) {
+      window.parent.postMessage({ type: 'resizePlugin', height: height }, '*');
+      // Also try the older DHIS2 format
+      window.parent.postMessage(JSON.stringify({ type: 'resizePlugin', height: height }), '*');
+    }
+  }
+
+  // Fire on load and whenever the DOM changes size
+  notifyParentHeight();
+  window.addEventListener('load', notifyParentHeight);
+  window.addEventListener('resize', notifyParentHeight);
+
+  // Watch for layout changes (card grid rendering, modal open/close)
+  if (window.ResizeObserver) {
+    new ResizeObserver(notifyParentHeight).observe(document.body);
+  }
+  // Fallback polling for older DHIS2 versions
+  setInterval(notifyParentHeight, 1000);
+</script>
+</body>
+</html>

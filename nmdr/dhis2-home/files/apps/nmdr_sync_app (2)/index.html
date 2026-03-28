@@ -1,0 +1,943 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NMDR Sync Scheduler — ICF-SL</title>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{--navy:#004080;--navy-lt:#0056b3;--gold:#ffc107;--gold-dk:#e0a800;--white:#fff;--bg:#f0f4f8;--border:#cdd8e3;--muted:#6c7a89;--green:#28a745;--red:#dc3545;--orange:#fd7e14;--cyan:#17a2b8}
+body{font-family:'Oswald',Arial,sans-serif;background:var(--bg);color:#111;font-weight:500;min-height:100vh}
+
+/* HEADER */
+.ph{background:var(--navy);color:var(--white);padding:16px 24px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px}
+.ph-left{display:flex;align-items:center;gap:14px}
+.ph-lb{background:var(--white);border-radius:6px;padding:6px}
+.ph-lb img{width:60px;height:auto}
+.ph h1{font-size:18px;font-weight:700;letter-spacing:1px}
+.ph .sub{font-size:11px;opacity:.85}
+.ph-right{display:flex;align-items:center;gap:10px}
+.src-badge{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);border-radius:6px;padding:6px 12px;font-size:11px;font-weight:600}
+.src-dot{width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:6px}
+.src-dot.on{background:#28a745}.src-dot.off{background:#dc3545}
+
+/* TABS */
+.tabs{display:flex;background:var(--white);border-bottom:3px solid var(--navy);padding:0 18px;gap:0}
+.tab{padding:12px 20px;cursor:pointer;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;border-bottom:3px solid transparent;margin-bottom:-3px;transition:all .2s;color:var(--muted)}
+.tab:hover{color:var(--navy);background:#f0f4f8}
+.tab.on{color:var(--navy);border-bottom-color:var(--navy)}
+
+/* MAIN */
+.wrap{padding:18px;max-width:1200px;margin:0 auto}
+.tp{display:none}.tp.on{display:block}
+
+/* BUTTONS */
+.btn{padding:9px 16px;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;text-transform:uppercase;letter-spacing:.5px;font-family:'Oswald',Arial,sans-serif;transition:all .2s;border:2px solid;display:inline-flex;align-items:center;gap:6px}
+.b-navy{background:var(--navy);color:var(--white);border-color:var(--navy)}.b-navy:hover{background:var(--navy-lt)}
+.b-gold{background:var(--gold);color:#000;border-color:var(--gold)}.b-gold:hover{background:var(--gold-dk)}
+.b-green{background:var(--green);color:var(--white);border-color:var(--green)}.b-green:hover{background:#218838}
+.b-red{background:var(--red);color:var(--white);border-color:var(--red)}.b-red:hover{background:#c82333}
+.b-out{background:var(--white);color:var(--navy);border-color:var(--navy)}.b-out:hover{background:var(--navy);color:var(--white)}
+.b-cyan{background:var(--cyan);color:var(--white);border-color:var(--cyan)}
+.b-sm{padding:5px 11px;font-size:11px}
+.b-full{width:100%;justify-content:center}
+.btn:disabled{opacity:.65;cursor:wait}
+@keyframes spin{to{transform:rotate(360deg)}}
+.btn:disabled::after{content:'';display:inline-block;width:10px;height:10px;border:2px solid currentColor;border-top-color:transparent;border-radius:50%;animation:spin .8s linear infinite}
+
+/* CARDS */
+.card{background:var(--white);border:4px double var(--navy);border-radius:8px;padding:20px;margin-bottom:16px}
+.card-title{font-size:14px;font-weight:700;color:var(--navy);margin-bottom:14px;display:flex;align-items:center;gap:8px;padding-bottom:10px;border-bottom:2px solid var(--border)}
+.card-title .icon{background:var(--navy);color:var(--white);width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0}
+
+/* FORM */
+.fg{margin-bottom:13px}
+.fl{display:block;color:var(--navy);font-size:11px;font-weight:700;margin-bottom:5px;text-transform:uppercase;letter-spacing:.5px}
+.fi,.fs{width:100%;padding:9px 12px;border:2px solid var(--navy);border-radius:6px;font-size:13px;font-family:'Oswald',Arial,sans-serif;font-weight:500;color:#000;background:var(--white);transition:border-color .2s}
+.fi:focus,.fs:focus{outline:none;border-color:var(--navy-lt);box-shadow:0 0 0 3px rgba(0,64,128,.1)}
+.fi.ro{background:#e9ecef;cursor:not-allowed}
+.fr2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.fr3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+
+/* DATASET LIST */
+.ds-list{max-height:300px;overflow-y:auto;border:2px solid var(--border);border-radius:6px}
+.ds-item{padding:9px 13px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:9px;cursor:pointer;font-size:12px;transition:background .15s}
+.ds-item:last-child{border-bottom:none}
+.ds-item:hover{background:#e7f3ff}
+.ds-item.sel{background:#d4edda}
+.ds-item input{accent-color:var(--navy);width:14px;height:14px;cursor:pointer;flex-shrink:0}
+.ds-name{flex:1}
+.ds-meta{font-size:10px;color:var(--muted);font-weight:400}
+.lc{display:flex;gap:7px;margin-bottom:9px;flex-wrap:wrap;align-items:center}
+.si-inp{padding:6px 11px;border:2px solid var(--border);border-radius:6px;font-family:'Oswald',sans-serif;font-size:12px;flex:1;min-width:140px}
+.si-inp:focus{outline:none;border-color:var(--navy)}
+
+/* SCHEDULE BUILDER */
+.sched-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px}
+.sched-opt{border:2px solid var(--border);border-radius:6px;padding:12px 8px;text-align:center;cursor:pointer;transition:all .2s}
+.sched-opt:hover{border-color:var(--navy);background:#e7f3ff}
+.sched-opt.on{border-color:var(--navy);background:var(--navy);color:var(--white)}
+.sched-opt .so-icon{font-size:20px;margin-bottom:4px}
+.sched-opt .so-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px}
+.sched-opt .so-desc{font-size:10px;opacity:.7;margin-top:2px;font-weight:400}
+
+/* JOB LIST */
+.job-list{display:flex;flex-direction:column;gap:10px}
+.job-card{background:#f8f9fa;border:2px solid var(--border);border-radius:8px;padding:14px 16px;display:flex;align-items:center;gap:14px;transition:all .2s}
+.job-card:hover{border-color:var(--navy);box-shadow:0 2px 8px rgba(0,64,128,.1)}
+.job-card.running{border-color:var(--orange);background:#fff8f0;animation:pulse 2s infinite}
+.job-card.success{border-color:var(--green);background:#f0fff4}
+.job-card.error{border-color:var(--red);background:#fff5f5}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(253,126,20,.3)}50%{box-shadow:0 0 0 6px rgba(253,126,20,0)}}
+.job-status-dot{width:12px;height:12px;border-radius:50%;flex-shrink:0}
+.job-status-dot.idle{background:#ccc}
+.job-status-dot.running{background:var(--orange);animation:blink 1s infinite}
+.job-status-dot.success{background:var(--green)}
+.job-status-dot.error{background:var(--red)}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+.job-info{flex:1}
+.job-name{font-size:13px;font-weight:700;color:var(--navy)}
+.job-detail{font-size:11px;color:var(--muted);font-weight:400;margin-top:2px}
+.job-actions{display:flex;gap:7px;flex-shrink:0}
+.job-toggle{width:40px;height:22px;border-radius:11px;background:#ccc;cursor:pointer;position:relative;transition:background .2s;border:none;flex-shrink:0}
+.job-toggle.on{background:var(--green)}
+.job-toggle::after{content:'';position:absolute;width:18px;height:18px;background:var(--white);border-radius:50%;top:2px;left:2px;transition:transform .2s;box-shadow:0 1px 3px rgba(0,0,0,.2)}
+.job-toggle.on::after{transform:translateX(18px)}
+
+/* PROGRESS */
+.prog-s{display:none;background:#f8f9fa;border:2px solid var(--navy);border-radius:8px;padding:14px;margin-top:12px}
+.prog-s.on{display:block}
+.pbar{height:22px;background:#e9ecef;border-radius:6px;overflow:hidden;border:2px solid var(--navy);margin-bottom:10px}
+.pfill{height:100%;background:linear-gradient(90deg,var(--navy),var(--navy-lt));transition:width .3s;display:flex;align-items:center;justify-content:center;color:var(--white);font-size:11px;font-weight:700;min-width:36px}
+.logc{max-height:220px;overflow-y:auto;background:#1a1a2e;border-radius:6px;padding:10px;font-family:'Courier New',monospace;font-size:11px}
+.le{padding:2px 0;border-bottom:1px solid #2a2a3e}
+.le.info{color:#17a2b8}.le.success{color:#28a745}.le.error{color:#dc3545}.le.warning{color:#ffc107}
+
+/* HISTORY TABLE */
+.htable{width:100%;border-collapse:collapse;font-size:12px}
+.htable th{background:var(--navy);color:var(--white);padding:9px 12px;text-align:left;font-size:11px;letter-spacing:.5px}
+.htable td{padding:9px 12px;border-bottom:1px solid var(--border)}
+.htable tr:hover td{background:#e7f3ff}
+.badge{display:inline-block;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:700;text-transform:uppercase}
+.badge.success{background:#d4edda;color:#155724}
+.badge.error{background:#f8d7da;color:#721c24}
+.badge.running{background:#fff3cd;color:#856404}
+.badge.idle{background:#e9ecef;color:#666}
+
+/* INFO BOX */
+.ib{background:#fff3cd;border:2px solid var(--gold);border-radius:6px;padding:10px 14px;margin-bottom:14px;font-size:12px;color:#856404}
+.ib.green{background:#d4edda;border-color:var(--green);color:#155724}
+.ib.blue{background:#e7f3ff;border-color:var(--navy);color:var(--navy)}
+.ib.red{background:#f8d7da;border-color:var(--red);color:#721c24}
+
+/* NOTIFICATION */
+.ntf{position:fixed;top:20px;left:50%;transform:translateX(-50%);padding:12px 24px;border-radius:8px;font-weight:700;z-index:2000;display:none;box-shadow:0 4px 16px rgba(0,0,0,.2);font-size:13px;font-family:'Oswald',sans-serif}
+.ntf.s{background:#d4edda;color:#155724;border:2px solid var(--green);display:block}
+.ntf.e{background:#f8d7da;color:#721c24;border:2px solid var(--red);display:block}
+.ntf.i{background:#e7f3ff;color:var(--navy);border:2px solid var(--navy);display:block}
+
+::-webkit-scrollbar{width:6px;height:6px}
+::-webkit-scrollbar-track{background:#f8f9fa}
+::-webkit-scrollbar-thumb{background:var(--navy);border-radius:4px}
+@media(max-width:700px){.fr2,.fr3,.sched-grid{grid-template-columns:1fr}.tabs{flex-wrap:wrap}}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="ph">
+  <div class="ph-left">
+    <div class="ph-lb"><img src="https://github.com/mohamedsillahkanu/gdp-dashboard-2/raw/6c7463b0d5c3be150aafae695a4bcbbd8aeb1499/ICF-SL.jpg" alt="ICF-SL"></div>
+    <div>
+      <div class="ph h1" style="font-size:18px;font-weight:700;letter-spacing:1px;">NMDR SYNC SCHEDULER</div>
+      <div class="sub">Automated data sync: HMIS → NMDR · ICF-SL</div>
+    </div>
+  </div>
+  <div class="ph-right">
+    <div class="src-badge"><span class="src-dot" id="srcDot"></span><span id="srcLabel">Not connected</span></div>
+    <div class="src-badge"><span class="src-dot" id="tgtDot"></span><span id="tgtLabel">Target</span></div>
+    <button class="btn b-out b-sm" onclick="showTab('settings')">⚙ Settings</button>
+  </div>
+</div>
+
+<!-- TABS -->
+<div class="tabs">
+  <div class="tab on" onclick="showTab('dashboard')" id="tab-dashboard">📊 Dashboard</div>
+  <div class="tab" onclick="showTab('datasets')" id="tab-datasets">📋 Datasets</div>
+  <div class="tab" onclick="showTab('schedule')" id="tab-schedule">⏰ Schedule</div>
+  <div class="tab" onclick="showTab('run')" id="tab-run">▶ Run Sync</div>
+  <div class="tab" onclick="showTab('history')" id="tab-history">📜 History</div>
+  <div class="tab" onclick="showTab('settings')" id="tab-settings">⚙ Settings</div>
+</div>
+
+<div class="wrap">
+
+  <!-- ── DASHBOARD TAB ── -->
+  <div class="tp on" id="tp-dashboard">
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:16px;">
+      <div class="card" style="text-align:center;padding:16px;">
+        <div style="font-size:32px;font-weight:700;color:var(--navy)" id="statDS">0</div>
+        <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-top:4px;">Datasets Configured</div>
+      </div>
+      <div class="card" style="text-align:center;padding:16px;">
+        <div style="font-size:32px;font-weight:700;color:var(--green)" id="statLastVals">—</div>
+        <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-top:4px;">Values Last Sync</div>
+      </div>
+      <div class="card" style="text-align:center;padding:16px;">
+        <div style="font-size:32px;font-weight:700;color:var(--orange)" id="statJobs">0</div>
+        <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-top:4px;">Active Jobs</div>
+      </div>
+      <div class="card" style="text-align:center;padding:16px;">
+        <div style="font-size:32px;font-weight:700;color:var(--cyan)" id="statNextRun">—</div>
+        <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-top:4px;">Next Sync</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><span class="icon">📡</span> Sync Jobs</div>
+      <div class="job-list" id="jobList">
+        <div style="padding:20px;text-align:center;color:var(--muted);">No jobs configured yet — go to Schedule tab to create one</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><span class="icon">📜</span> Recent Activity</div>
+      <div class="logc" id="activityLog" style="max-height:180px;">
+        <div class="le info">[Ready] NMDR Sync Scheduler started</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── DATASETS TAB ── -->
+  <div class="tp" id="tp-datasets">
+    <div class="card">
+      <div class="card-title"><span class="icon">📋</span> Configure Datasets to Sync</div>
+      <div class="ib blue">Select which datasets to include in sync. Only these datasets will be pulled from the source HMIS and pushed to NMDR.</div>
+      <div class="lc">
+        <button class="btn b-out b-sm" onclick="loadDS()">Load Datasets from Source</button>
+        <button class="btn b-out b-sm" onclick="selAll()">Select All</button>
+        <button class="btn b-sm" style="background:#fff;color:var(--red);border:2px solid var(--red);" onclick="clrAll()">Clear All</button>
+        <input class="si-inp" placeholder="Search datasets..." oninput="filtDS(this.value)">
+      </div>
+      <div class="ds-list" id="dsList"><div style="padding:20px;text-align:center;color:var(--muted);">Click "Load Datasets from Source" to begin</div></div>
+      <div style="margin-top:8px;display:flex;justify-content:space-between;align-items:center;">
+        <span style="font-size:11px;color:var(--muted);">Selected: <strong id="selCnt">0</strong> datasets</span>
+        <button class="btn b-navy b-sm" onclick="saveDS()">💾 Save Dataset Selection</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── SCHEDULE TAB ── -->
+  <div class="tp" id="tp-schedule">
+    <div class="card">
+      <div class="card-title"><span class="icon">⏰</span> Create Sync Job</div>
+      <div class="fg">
+        <label class="fl">Job Name</label>
+        <input class="fi" id="jobName" placeholder="e.g. Daily HMIS Sync" value="Daily HMIS Sync">
+      </div>
+
+      <label class="fl" style="margin-bottom:10px;">Sync Frequency</label>
+      <div class="sched-grid">
+        <div class="sched-opt on" id="so-hourly" onclick="setSched('hourly',this)">
+          <div class="so-icon">⚡</div>
+          <div class="so-label">Hourly</div>
+          <div class="so-desc">Every hour</div>
+        </div>
+        <div class="sched-opt" id="so-daily" onclick="setSched('daily',this)">
+          <div class="so-icon">🌅</div>
+          <div class="so-label">Daily</div>
+          <div class="so-desc">Once per day</div>
+        </div>
+        <div class="sched-opt" id="so-weekly" onclick="setSched('weekly',this)">
+          <div class="so-icon">📅</div>
+          <div class="so-label">Weekly</div>
+          <div class="so-desc">Once per week</div>
+        </div>
+        <div class="sched-opt" id="so-monthly" onclick="setSched('monthly',this)">
+          <div class="so-icon">🗓</div>
+          <div class="so-label">Monthly</div>
+          <div class="so-desc">First of month</div>
+        </div>
+      </div>
+
+      <div id="sched-hourly-opts" style="margin-bottom:14px;">
+        <div class="fr2">
+          <div class="fg"><label class="fl">Start at minute</label><input class="fi" type="number" id="hourMin" min="0" max="59" value="0" placeholder="0"></div>
+          <div class="fg"><label class="fl">Preview cron</label><input class="fi ro" id="cronPreview" readonly value="0 0 * * * ?"></div>
+        </div>
+      </div>
+      <div id="sched-daily-opts" style="display:none;margin-bottom:14px;">
+        <div class="fr2">
+          <div class="fg"><label class="fl">Time (hour)</label><input class="fi" type="number" id="dailyHour" min="0" max="23" value="2" placeholder="2"></div>
+          <div class="fg"><label class="fl">Preview cron</label><input class="fi ro" id="cronPreviewD" readonly value="0 0 2 * * ?"></div>
+        </div>
+      </div>
+      <div id="sched-weekly-opts" style="display:none;margin-bottom:14px;">
+        <div class="fr2">
+          <div class="fg"><label class="fl">Day of week</label>
+            <select class="fs" id="weekDay">
+              <option value="MON">Monday</option><option value="TUE">Tuesday</option>
+              <option value="WED">Wednesday</option><option value="THU">Thursday</option>
+              <option value="FRI">Friday</option><option value="SAT">Saturday</option><option value="SUN">Sunday</option>
+            </select>
+          </div>
+          <div class="fg"><label class="fl">Time (hour)</label><input class="fi" type="number" id="weekHour" min="0" max="23" value="2"></div>
+        </div>
+      </div>
+      <div id="sched-monthly-opts" style="display:none;margin-bottom:14px;">
+        <div class="fr2">
+          <div class="fg"><label class="fl">Day of month</label><input class="fi" type="number" id="monthDay" min="1" max="28" value="1"></div>
+          <div class="fg"><label class="fl">Time (hour)</label><input class="fi" type="number" id="monthHour" min="0" max="23" value="2"></div>
+        </div>
+      </div>
+
+      <label class="fl" style="margin-bottom:10px;">Period to sync</label>
+      <div class="fr3" style="margin-bottom:14px;">
+        <div class="fg"><label class="fl">Type</label>
+          <select class="fs" id="syncPeriodType" onchange="updPeriodFields()">
+            <option value="last_month">Last Month</option>
+            <option value="last_3_months">Last 3 Months</option>
+            <option value="last_6_months">Last 6 Months</option>
+            <option value="last_12_months">Last 12 Months</option>
+            <option value="current_year">Current Year</option>
+            <option value="custom">Custom Range</option>
+          </select>
+        </div>
+        <div class="fg" id="customFrom" style="display:none;"><label class="fl">From</label><input class="fi" type="month" id="syncFrom"></div>
+        <div class="fg" id="customTo" style="display:none;"><label class="fl">To</label><input class="fi" type="month" id="syncTo"></div>
+      </div>
+
+      <div class="fg">
+        <label class="fl">Org Unit Level</label>
+        <select class="fs" id="syncOULevel">
+          <option value="">All levels</option>
+          <option value="1">Level 1 — Country</option>
+          <option value="2">Level 2 — District</option>
+          <option value="3">Level 3 — Council</option>
+          <option value="4">Level 4 — Chiefdom</option>
+          <option value="5" selected>Level 5 — Health Facility</option>
+        </select>
+      </div>
+
+      <button class="btn b-gold b-full" onclick="createJob()" style="margin-top:6px;">➕ Create Sync Job</button>
+    </div>
+  </div>
+
+  <!-- ── RUN SYNC TAB ── -->
+  <div class="tp" id="tp-run">
+    <div class="card">
+      <div class="card-title"><span class="icon">▶</span> Manual Sync</div>
+      <div class="ib">Run a sync now without waiting for the schedule. Uses the datasets configured in the Datasets tab.</div>
+
+      <div class="fr2" style="margin-bottom:14px;">
+        <div class="fg"><label class="fl">Period Type</label>
+          <select class="fs" id="runPT" onchange="updRunPeriod()">
+            <option value="last_month">Last Month</option>
+            <option value="last_3_months">Last 3 Months</option>
+            <option value="last_6_months">Last 6 Months</option>
+            <option value="last_12_months">Last 12 Months</option>
+            <option value="current_year">Current Year</option>
+            <option value="custom">Custom Range</option>
+          </select>
+        </div>
+        <div class="fg"><label class="fl">Org Unit Level</label>
+          <select class="fs" id="runOULevel">
+            <option value="">All levels</option>
+            <option value="1">Level 1 — Country</option>
+            <option value="2">Level 2 — District</option>
+            <option value="3">Level 3 — Council</option>
+            <option value="4">Level 4 — Chiefdom</option>
+            <option value="5" selected>Level 5 — Health Facility</option>
+          </select>
+        </div>
+      </div>
+      <div id="runCustom" style="display:none;" class="fr2">
+        <div class="fg"><label class="fl">From</label><input class="fi" type="month" id="runFrom"></div>
+        <div class="fg"><label class="fl">To</label><input class="fi" type="month" id="runTo"></div>
+      </div>
+
+      <div style="display:flex;gap:10px;margin-top:6px;">
+        <button class="btn b-navy" onclick="runSync()" id="runBtn">▶ Run Sync Now</button>
+        <button class="btn b-out" onclick="stopSync()" id="stopBtn" style="display:none;">⏹ Stop</button>
+      </div>
+
+      <div class="prog-s" id="runProg">
+        <div class="pbar"><div class="pfill" id="runFill" style="width:0%">0%</div></div>
+        <div class="logc" id="runLog"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── HISTORY TAB ── -->
+  <div class="tp" id="tp-history">
+    <div class="card">
+      <div class="card-title"><span class="icon">📜</span> Sync History <button class="btn b-out b-sm" onclick="clrHistory()" style="margin-left:auto;">Clear History</button></div>
+      <div style="overflow-x:auto;">
+        <table class="htable" id="histTable">
+          <thead><tr><th>Date/Time</th><th>Job</th><th>Datasets</th><th>Period</th><th>Values Synced</th><th>Duration</th><th>Status</th></tr></thead>
+          <tbody id="histBody"><tr><td colspan="7" style="text-align:center;padding:20px;color:var(--muted);">No sync history yet</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── SETTINGS TAB ── -->
+  <div class="tp" id="tp-settings">
+    <div class="card">
+      <div class="card-title"><span class="icon">🔗</span> Source Instance (HMIS)</div>
+      <div class="fg"><label class="fl">Source URL</label><input class="fi ro" id="srcUrl" value="https://sl.dhis2.org/hmis23" readonly></div>
+      <div class="fr2">
+        <div class="fg"><label class="fl">Username</label><input class="fi ro" id="srcUser" value="musa-sillahkanu" readonly></div>
+        <div class="fg"><label class="fl">Password</label><input class="fi ro" id="srcPass" type="password" value="Navigator/2024!" readonly></div>
+      </div>
+      <button class="btn b-cyan b-sm" onclick="testSrc()">🔌 Test Source Connection</button>
+      <div id="srcStatus" style="margin-top:10px;"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><span class="icon">🎯</span> Target Instance (NMDR)</div>
+      <div class="fg"><label class="fl">Target URL</label><input class="fi" id="tgtUrl" placeholder="http://nmdr:8080" value="http://nmdr:8080"></div>
+      <div class="fr2">
+        <div class="fg"><label class="fl">Username</label><input class="fi" id="tgtUser" placeholder="admin" value="admin"></div>
+        <div class="fg"><label class="fl">Password</label><input class="fi" id="tgtPass" type="password" placeholder="district" value="district"></div>
+      </div>
+      <button class="btn b-cyan b-sm" onclick="testTgt()">🔌 Test Target Connection</button>
+      <div id="tgtStatus" style="margin-top:10px;"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><span class="icon">⚙</span> Sync Options</div>
+      <div class="fr2">
+        <div class="fg"><label class="fl">Batch size (org units per request)</label><input class="fi" type="number" id="batchSize" value="50" min="10" max="200"></div>
+        <div class="fg"><label class="fl">Delay between batches (ms)</label><input class="fi" type="number" id="batchDelay" value="100" min="50" max="2000"></div>
+      </div>
+      <div class="fg">
+        <label class="fl">Import strategy</label>
+        <select class="fs" id="importStrategy">
+          <option value="NEW_AND_UPDATES">New and Updates</option>
+          <option value="NEW_ONLY">New Only</option>
+        </select>
+      </div>
+      <button class="btn b-navy b-sm" onclick="saveSettings()">💾 Save Settings</button>
+    </div>
+  </div>
+
+</div><!-- end wrap -->
+
+<div class="ntf" id="ntf"></div>
+
+<script>
+const PROXY='https://script.google.com/macros/s/AKfycbyRXc68PYSmDSCYPakAS8Gc9R00kRjmsMYoDujPYMItyquXfwMAJUtRqXLiDlNWbSfDQQ/exec';
+
+const S={
+  src:{url:'https://sl.dhis2.org/hmis23',user:'musa-sillahkanu',pass:'Navigator/2024!',auth:''},
+  tgt:{url:'http://nmdr:8080',user:'admin',pass:'district',auth:''},
+  allDS:[],selDS:new Set(),jobs:[],history:[],
+  schedType:'hourly',running:false,stopFlag:false,
+  batchSize:50,batchDelay:100,importStrategy:'NEW_AND_UPDATES'
+};
+
+// ── INIT ───────────────────────────────────────────────────────────────────
+window.onload=()=>{
+  S.src.auth='Basic '+btoa(S.src.user+':'+S.src.pass);
+  S.tgt.auth='Basic '+btoa(S.tgt.user+':'+S.tgt.pass);
+  loadSaved();
+  updateHeader();
+  updateDashboard();
+  autoConnect();
+};
+
+function loadSaved(){
+  try{
+    const ds=localStorage.getItem('nmdr_selDS');if(ds)S.selDS=new Set(JSON.parse(ds));
+    const jobs=localStorage.getItem('nmdr_jobs');if(jobs)S.jobs=JSON.parse(jobs);
+    const hist=localStorage.getItem('nmdr_history');if(hist)S.history=JSON.parse(hist);
+    const sets=localStorage.getItem('nmdr_settings');
+    if(sets){const p=JSON.parse(sets);S.batchSize=p.batchSize||50;S.batchDelay=p.batchDelay||100;S.importStrategy=p.importStrategy||'NEW_AND_UPDATES';
+      document.getElementById('batchSize').value=S.batchSize;
+      document.getElementById('batchDelay').value=S.batchDelay;
+      document.getElementById('importStrategy').value=S.importStrategy;
+    }
+  }catch(e){}
+}
+
+// ── TABS ───────────────────────────────────────────────────────────────────
+function showTab(t){
+  document.querySelectorAll('.tp').forEach(p=>p.classList.remove('on'));
+  document.querySelectorAll('.tab').forEach(x=>x.classList.remove('on'));
+  document.getElementById('tp-'+t).classList.add('on');
+  document.getElementById('tab-'+t).classList.add('on');
+  if(t==='history')renderHistory();
+  if(t==='dashboard'){renderJobs();updateDashboard();}
+}
+
+// ── NOTIFY ─────────────────────────────────────────────────────────────────
+function ntf(msg,t='i'){const el=document.getElementById('ntf');el.textContent=msg;el.className='ntf '+t;setTimeout(()=>el.className='ntf',4000)}
+function lg(id,msg,t='info'){const c=document.getElementById(id);if(!c)return;const d=document.createElement('div');d.className='le '+t;d.textContent=`[${new Date().toLocaleTimeString()}] ${msg}`;c.appendChild(d);c.scrollTop=c.scrollHeight}
+function sp(id,pct){const el=document.getElementById(id);if(!el)return;el.style.width=pct+'%';el.textContent=pct+'%'}
+function shProg(id){document.getElementById(id).classList.add('on')}
+function act(msg,t='info'){lg('activityLog',msg,t)}
+
+// ── API ────────────────────────────────────────────────────────────────────
+function srcGet(path){
+  const u=`${PROXY}?url=${encodeURIComponent(S.src.url+path)}&Authorization=${encodeURIComponent(S.src.auth)}`;
+  return fetch(u);
+}
+
+async function tgtReq(path,method='GET',body=null){
+  const opts={method,headers:{'Content-Type':'application/json','Authorization':S.tgt.auth}};
+  if(body)opts.body=JSON.stringify(body);
+  return fetch(S.tgt.url+path,opts);
+}
+
+// ── CONNECTION ─────────────────────────────────────────────────────────────
+async function autoConnect(){
+  try{
+    const r=await srcGet('/api/system/info.json');
+    if(r.ok){document.getElementById('srcDot').className='src-dot on';document.getElementById('srcLabel').textContent='HMIS Connected';act('Source HMIS connected','success');}
+  }catch(e){}
+  try{
+    const r=await tgtReq('/api/system/info.json');
+    if(r.ok){document.getElementById('tgtDot').className='src-dot on';document.getElementById('tgtLabel').textContent='NMDR Connected';act('Target NMDR connected','success');}
+  }catch(e){document.getElementById('tgtDot').className='src-dot off';}
+}
+
+async function testSrc(){
+  const btn=document.querySelector('button[onclick="testSrc()"]');btn.disabled=true;
+  try{
+    const r=await srcGet('/api/me.json');
+    if(r.ok){const d=await r.json();document.getElementById('srcStatus').innerHTML=`<div class="ib green">✅ Connected as ${d.firstName||''} ${d.surname||''}</div>`;}
+    else document.getElementById('srcStatus').innerHTML=`<div class="ib red">❌ Failed: HTTP ${r.status}</div>`;
+  }catch(e){document.getElementById('srcStatus').innerHTML=`<div class="ib red">❌ Error: ${e.message}</div>`;}
+  finally{btn.disabled=false;}
+}
+
+async function testTgt(){
+  const btn=document.querySelector('button[onclick="testTgt()"]');btn.disabled=true;
+  S.tgt.url=document.getElementById('tgtUrl').value.trim().replace(/\/$/,'');
+  S.tgt.user=document.getElementById('tgtUser').value.trim();
+  S.tgt.pass=document.getElementById('tgtPass').value.trim();
+  S.tgt.auth='Basic '+btoa(S.tgt.user+':'+S.tgt.pass);
+  try{
+    const r=await tgtReq('/api/me.json');
+    if(r.ok){const d=await r.json();document.getElementById('tgtStatus').innerHTML=`<div class="ib green">✅ Connected as ${d.firstName||''} ${d.surname||''}</div>`;document.getElementById('tgtDot').className='src-dot on';document.getElementById('tgtLabel').textContent='NMDR Connected';}
+    else document.getElementById('tgtStatus').innerHTML=`<div class="ib red">❌ Failed: HTTP ${r.status}</div>`;
+  }catch(e){document.getElementById('tgtStatus').innerHTML=`<div class="ib red">❌ Error: ${e.message}</div>`;}
+  finally{btn.disabled=false;}
+}
+
+function saveSettings(){
+  S.batchSize=parseInt(document.getElementById('batchSize').value)||50;
+  S.batchDelay=parseInt(document.getElementById('batchDelay').value)||100;
+  S.importStrategy=document.getElementById('importStrategy').value;
+  localStorage.setItem('nmdr_settings',JSON.stringify({batchSize:S.batchSize,batchDelay:S.batchDelay,importStrategy:S.importStrategy}));
+  ntf('Settings saved','s');
+}
+
+// ── DATASETS ───────────────────────────────────────────────────────────────
+async function loadDS(){
+  const btn=document.querySelector('button[onclick="loadDS()"]');btn.disabled=true;btn.textContent='Loading...';
+  try{
+    const r=await srcGet('/api/dataSets.json?fields=id,displayName,periodType,dataSetElements[dataElement[id]]&paging=false');
+    if(!r.ok)throw new Error(r.status);
+    const d=await r.json();
+    S.allDS=d.dataSets||[];
+    renderDSList(S.allDS);
+    ntf(`Loaded ${S.allDS.length} datasets`,'s');
+    act(`Loaded ${S.allDS.length} datasets from source`,'success');
+  }catch(e){ntf('Failed: '+e.message,'e');}
+  finally{btn.disabled=false;btn.textContent='Load Datasets from Source';}
+}
+
+function renderDSList(list){
+  const c=document.getElementById('dsList');
+  if(!list.length){c.innerHTML='<div style="padding:18px;text-align:center;color:var(--muted);">No datasets found</div>';return;}
+  c.innerHTML='';
+  list.forEach(ds=>{
+    const div=document.createElement('div');
+    div.className='ds-item'+(S.selDS.has(ds.id)?' sel':'');
+    div.dataset.id=ds.id;
+    div.innerHTML=`<input type="checkbox" ${S.selDS.has(ds.id)?'checked':''} onchange="tog('${ds.id}',this.checked)">
+      <div class="ds-name">${ds.displayName}<div class="ds-meta">${ds.periodType||''} · ${(ds.dataSetElements||[]).length} elements · ${ds.id}</div></div>`;
+    div.onclick=e=>{if(e.target.tagName!=='INPUT'){const cb=div.querySelector('input');cb.checked=!cb.checked;tog(ds.id,cb.checked);}};
+    c.appendChild(div);
+  });
+  updCnt();
+}
+
+function tog(id,checked){
+  if(checked)S.selDS.add(id);else S.selDS.delete(id);
+  const item=document.querySelector(`.ds-item[data-id="${id}"]`);
+  if(item){item.classList.toggle('sel',checked);item.querySelector('input').checked=checked;}
+  updCnt();
+}
+function selAll(){S.allDS.forEach(ds=>{S.selDS.add(ds.id);const i=document.querySelector(`.ds-item[data-id="${ds.id}"]`);if(i){i.classList.add('sel');i.querySelector('input').checked=true;}});updCnt();}
+function clrAll(){S.selDS.clear();document.querySelectorAll('.ds-item').forEach(i=>{i.classList.remove('sel');i.querySelector('input').checked=false;});updCnt();}
+function filtDS(q){document.querySelectorAll('.ds-item').forEach(i=>{i.style.display=i.querySelector('.ds-name').textContent.toLowerCase().includes(q.toLowerCase())?'':'none';});}
+function updCnt(){document.getElementById('selCnt').textContent=S.selDS.size;document.getElementById('statDS').textContent=S.selDS.size;}
+function saveDS(){
+  localStorage.setItem('nmdr_selDS',JSON.stringify([...S.selDS]));
+  ntf(`Saved ${S.selDS.size} datasets`,'s');
+  act(`Dataset selection saved: ${S.selDS.size} datasets`,'success');
+  updateDashboard();
+}
+
+// ── SCHEDULE ───────────────────────────────────────────────────────────────
+function setSched(type,el){
+  S.schedType=type;
+  document.querySelectorAll('.sched-opt').forEach(x=>x.classList.remove('on'));
+  el.classList.add('on');
+  ['hourly','daily','weekly','monthly'].forEach(t=>{
+    const el=document.getElementById('sched-'+t+'-opts');
+    if(el)el.style.display=t===type?'block':'none';
+  });
+}
+
+function getCron(){
+  if(S.schedType==='hourly'){const m=document.getElementById('hourMin').value||0;return `0 ${m} * * * ?`;}
+  if(S.schedType==='daily'){const h=document.getElementById('dailyHour').value||2;return `0 0 ${h} * * ?`;}
+  if(S.schedType==='weekly'){const day=document.getElementById('weekDay').value;const h=document.getElementById('weekHour').value||2;return `0 0 ${h} ? * ${day}`;}
+  if(S.schedType==='monthly'){const d=document.getElementById('monthDay').value||1;const h=document.getElementById('monthHour').value||2;return `0 0 ${h} ${d} * ?`;}
+  return '0 0 2 * * ?';
+}
+
+function getNextRun(cron){
+  // Simple next run estimator
+  const now=new Date();
+  if(S.schedType==='hourly'){const next=new Date(now);next.setMinutes(parseInt(cron.split(' ')[1])||0,0,0);if(next<=now)next.setHours(next.getHours()+1);return next.toLocaleTimeString();}
+  if(S.schedType==='daily'){const h=parseInt(cron.split(' ')[2])||2;const next=new Date(now);next.setHours(h,0,0,0);if(next<=now)next.setDate(next.getDate()+1);return next.toLocaleDateString()+' '+next.toLocaleTimeString();}
+  return 'Scheduled';
+}
+
+function updPeriodFields(){
+  const t=document.getElementById('syncPeriodType').value;
+  document.getElementById('customFrom').style.display=t==='custom'?'block':'none';
+  document.getElementById('customTo').style.display=t==='custom'?'block':'none';
+}
+
+function updRunPeriod(){
+  const t=document.getElementById('runPT').value;
+  document.getElementById('runCustom').style.display=t==='custom'?'flex':'none';
+}
+
+function getPeriodParam(typeEl,fromEl,toEl){
+  const type=document.getElementById(typeEl).value;
+  const now=new Date();
+  const y=now.getFullYear(),m=now.getMonth()+1;
+  const pad=n=>String(n).padStart(2,'0');
+  if(type==='last_month'){const lm=m===1?12:m-1;const ly=m===1?y-1:y;return `period=${ly}${pad(lm)}`;}
+  if(type==='last_3_months'){const end=new Date(y,m-1,1);const start=new Date(y,m-4,1);return `startDate=${start.getFullYear()}-${pad(start.getMonth()+1)}-01&endDate=${end.getFullYear()}-${pad(end.getMonth()+1)}-01`;}
+  if(type==='last_6_months'){const end=new Date(y,m-1,1);const start=new Date(y,m-7,1);return `startDate=${start.getFullYear()}-${pad(start.getMonth()+1)}-01&endDate=${end.getFullYear()}-${pad(end.getMonth()+1)}-01`;}
+  if(type==='last_12_months'){const start=new Date(y-1,m-1,1);return `startDate=${start.getFullYear()}-${pad(start.getMonth()+1)}-01&endDate=${y}-${pad(m)}-01`;}
+  if(type==='current_year'){return `startDate=${y}-01-01&endDate=${y}-12-31`;}
+  if(type==='custom'){const f=document.getElementById(fromEl).value;const t=document.getElementById(toEl).value;if(!f||!t)return null;const[sy,sm]=f.split('-');const[ey,em]=t.split('-');const ld=new Date(+ey,+em,0).getDate();return `startDate=${sy}-${sm}-01&endDate=${ey}-${em}-${ld}`;}
+  return null;
+}
+
+function createJob(){
+  if(!S.selDS.size){ntf('Select and save datasets first (Datasets tab)','e');return;}
+  const name=document.getElementById('jobName').value.trim()||'Sync Job';
+  const cron=getCron();
+  const periodType=document.getElementById('syncPeriodType').value;
+  const ouLevel=document.getElementById('syncOULevel').value;
+  const job={
+    id:Date.now(),name,cron,schedType:S.schedType,periodType,ouLevel,
+    enabled:true,status:'idle',lastRun:null,lastValues:0,
+    nextRun:getNextRun(cron),datasets:[...S.selDS]
+  };
+  S.jobs.push(job);
+  localStorage.setItem('nmdr_jobs',JSON.stringify(S.jobs));
+  renderJobs();
+  updateDashboard();
+  startJobTimer(job);
+  ntf(`Job "${name}" created!`,'s');
+  act(`Job "${name}" created — ${getCronLabel(cron)}`,'success');
+  showTab('dashboard');
+}
+
+function getCronLabel(cron){
+  if(S.schedType==='hourly')return 'Runs every hour';
+  if(S.schedType==='daily'){const h=cron.split(' ')[2];return `Runs daily at ${h}:00`;}
+  if(S.schedType==='weekly'){const day=cron.split(' ')[5];const h=cron.split(' ')[2];return `Runs every ${day} at ${h}:00`;}
+  if(S.schedType==='monthly'){const d=cron.split(' ')[3];const h=cron.split(' ')[2];return `Runs monthly on day ${d} at ${h}:00`;}
+  return cron;
+}
+
+// ── JOB TIMERS ─────────────────────────────────────────────────────────────
+const timers={};
+function startJobTimer(job){
+  if(timers[job.id])clearInterval(timers[job.id]);
+  if(!job.enabled)return;
+  const ms=job.schedType==='hourly'?3600000:job.schedType==='daily'?86400000:job.schedType==='weekly'?604800000:2592000000;
+  timers[job.id]=setInterval(()=>{if(job.enabled&&!S.running)execJob(job);},ms);
+}
+
+function startAllTimers(){S.jobs.forEach(j=>{if(j.enabled)startJobTimer(j);});}
+
+// ── RENDER JOBS ────────────────────────────────────────────────────────────
+function renderJobs(){
+  const c=document.getElementById('jobList');
+  if(!S.jobs.length){c.innerHTML='<div style="padding:20px;text-align:center;color:var(--muted);">No jobs configured — go to Schedule tab</div>';return;}
+  c.innerHTML='';
+  S.jobs.forEach(job=>{
+    const div=document.createElement('div');
+    div.className=`job-card ${job.status}`;
+    div.innerHTML=`
+      <div class="job-status-dot ${job.status}"></div>
+      <div class="job-info">
+        <div class="job-name">${job.name}</div>
+        <div class="job-detail">${job.datasets.length} datasets · ${job.schedType} · Next: ${job.nextRun||'—'} · Last: ${job.lastRun?job.lastRun+'  ('+job.lastValues+' values)':'Never'}</div>
+      </div>
+      <div class="job-actions">
+        <button class="btn b-navy b-sm" onclick="runJobNow(${job.id})">▶ Now</button>
+        <button class="btn b-out b-sm" onclick="deleteJob(${job.id})">🗑</button>
+        <button class="job-toggle ${job.enabled?'on':''}" onclick="toggleJob(${job.id})" title="${job.enabled?'Disable':'Enable'}"></button>
+      </div>`;
+    c.appendChild(div);
+  });
+}
+
+function toggleJob(id){
+  const job=S.jobs.find(j=>j.id===id);if(!job)return;
+  job.enabled=!job.enabled;
+  if(!job.enabled&&timers[id]){clearInterval(timers[id]);delete timers[id];}
+  else startJobTimer(job);
+  localStorage.setItem('nmdr_jobs',JSON.stringify(S.jobs));
+  renderJobs();updateDashboard();
+  ntf(`Job ${job.enabled?'enabled':'disabled'}`,'i');
+}
+
+function deleteJob(id){
+  if(!confirm('Delete this job?'))return;
+  if(timers[id]){clearInterval(timers[id]);delete timers[id];}
+  S.jobs=S.jobs.filter(j=>j.id!==id);
+  localStorage.setItem('nmdr_jobs',JSON.stringify(S.jobs));
+  renderJobs();updateDashboard();
+  ntf('Job deleted','i');
+}
+
+function runJobNow(id){const job=S.jobs.find(j=>j.id===id);if(job)execJob(job);}
+
+// ── DASHBOARD ──────────────────────────────────────────────────────────────
+function updateDashboard(){
+  document.getElementById('statDS').textContent=S.selDS.size;
+  document.getElementById('statJobs').textContent=S.jobs.filter(j=>j.enabled).length;
+  const next=S.jobs.filter(j=>j.enabled&&j.nextRun).map(j=>j.nextRun)[0]||'—';
+  document.getElementById('statNextRun').textContent=next.length>10?next.substring(0,10)+'…':next;
+  const lastH=S.history[0];
+  document.getElementById('statLastVals').textContent=lastH?lastH.values.toLocaleString():'—';
+}
+function updateHeader(){document.getElementById('srcLabel').textContent='HMIS Source';}
+
+// ── PERIOD BUILDER ─────────────────────────────────────────────────────────
+function buildPeriodParam(job){
+  const now=new Date();const y=now.getFullYear(),m=now.getMonth()+1;
+  const pad=n=>String(n).padStart(2,'0');
+  const t=job.periodType||'last_month';
+  if(t==='last_month'){const lm=m===1?12:m-1;const ly=m===1?y-1:y;return `period=${ly}${pad(lm)}`;}
+  if(t==='last_3_months'){const s=new Date(y,m-4,1);return `startDate=${s.getFullYear()}-${pad(s.getMonth()+1)}-01&endDate=${y}-${pad(m)}-01`;}
+  if(t==='last_6_months'){const s=new Date(y,m-7,1);return `startDate=${s.getFullYear()}-${pad(s.getMonth()+1)}-01&endDate=${y}-${pad(m)}-01`;}
+  if(t==='last_12_months'){const s=new Date(y-1,m-1,1);return `startDate=${s.getFullYear()}-${pad(s.getMonth()+1)}-01&endDate=${y}-${pad(m)}-01`;}
+  if(t==='current_year'){return `startDate=${y}-01-01&endDate=${y}-12-31`;}
+  return `period=${y}${pad(m)}`;
+}
+
+// ── CORE SYNC ENGINE ───────────────────────────────────────────────────────
+async function execJob(job,logId='activityLog',fillId=null){
+  if(S.running){ntf('Sync already running','e');return;}
+  S.running=true;S.stopFlag=false;
+  const start=Date.now();
+  job.status='running';renderJobs();
+  act(`Starting sync: "${job.name}"...`,'info');
+
+  try{
+    const pp=buildPeriodParam(job);
+    const dsIds=job.datasets;
+    if(!dsIds.length){act('No datasets configured','error');return;}
+
+    act(`Fetching org units (level ${job.ouLevel||'all'})...`,'info');
+    const ouUrl=`/api/organisationUnits.json?fields=id&paging=false${job.ouLevel?'&level='+job.ouLevel:''}`;
+    const ouR=await srcGet(ouUrl);
+    if(!ouR.ok)throw new Error('Org units: '+ouR.status);
+    const ouD=await ouR.json();
+    const ouIds=(ouD.organisationUnits||[]).map(o=>o.id);
+    act(`Found ${ouIds.length} org units, ${dsIds.length} datasets`,'info');
+    if(fillId)sp(fillId,10);
+
+    const B=S.batchSize;
+    const batches=[];
+    for(let i=0;i<ouIds.length;i+=B)batches.push(ouIds.slice(i,i+B));
+
+    let allVals=[];
+    for(let i=0;i<batches.length;i++){
+      if(S.stopFlag){act('Sync stopped by user','warning');break;}
+      if(fillId)sp(fillId,Math.round(10+(i/batches.length)*60));
+      const url=`/api/dataValueSets.json?dataSet=${dsIds.join(',')}&orgUnit=${batches[i].join(',')}&${pp}`;
+      const r=await srcGet(url);
+      if(r.ok){const d=await r.json();if(d.dataValues)allVals=allVals.concat(d.dataValues);}
+      if(i%20===0)act(`Batch ${i+1}/${batches.length} — ${allVals.length} values pulled`,'info');
+      await new Promise(r=>setTimeout(r,S.batchDelay));
+    }
+
+    act(`Pulled ${allVals.length} values from source. Pushing to target...`,'success');
+    if(fillId)sp(fillId,75);
+
+    let imported=0,updated=0;
+    const TB=1000;
+    for(let i=0;i<allVals.length;i+=TB){
+      if(S.stopFlag)break;
+      if(fillId)sp(fillId,Math.round(75+(i/allVals.length)*22));
+      const r=await tgtReq(`/api/dataValueSets?strategy=${S.importStrategy}&async=false`,'POST',{dataValues:allVals.slice(i,i+TB)});
+      if(r.ok||r.status===409){let d={};try{d=await r.json();}catch(e){}imported+=(d.importCount?.imported||0);updated+=(d.importCount?.updated||0);}
+      await new Promise(r=>setTimeout(r,60));
+    }
+
+    if(fillId)sp(fillId,100);
+    const dur=Math.round((Date.now()-start)/1000);
+    act(`✅ Sync complete: ${imported} imported, ${updated} updated in ${dur}s`,'success');
+
+    job.status='success';job.lastRun=new Date().toLocaleString();job.lastValues=imported+updated;
+    job.nextRun=getNextRun(job.cron);
+
+    // Save to history
+    S.history.unshift({ts:new Date().toLocaleString(),job:job.name,datasets:dsIds.length,period:pp,values:imported+updated,duration:dur+'s',status:'success'});
+    if(S.history.length>50)S.history.pop();
+    localStorage.setItem('nmdr_history',JSON.stringify(S.history));
+    localStorage.setItem('nmdr_jobs',JSON.stringify(S.jobs));
+    document.getElementById('statLastVals').textContent=(imported+updated).toLocaleString();
+    ntf(`Sync done: ${imported+updated} values`,'s');
+  }catch(e){
+    act('ERROR: '+e.message,'error');
+    job.status='error';
+    S.history.unshift({ts:new Date().toLocaleString(),job:job.name,datasets:job.datasets.length,period:'—',values:0,duration:'—',status:'error'});
+    localStorage.setItem('nmdr_history',JSON.stringify(S.history));
+    ntf('Sync failed: '+e.message,'e');
+  }finally{
+    S.running=false;
+    renderJobs();updateDashboard();
+    document.getElementById('runBtn').disabled=false;
+    document.getElementById('stopBtn').style.display='none';
+    document.getElementById('runBtn').style.display='';
+  }
+}
+
+// ── MANUAL RUN ─────────────────────────────────────────────────────────────
+async function runSync(){
+  if(!S.selDS.size){ntf('No datasets selected — go to Datasets tab','e');return;}
+  const pp=getPeriodParam('runPT','runFrom','runTo');
+  if(!pp){ntf('Select a period','e');return;}
+  const ouLevel=document.getElementById('runOULevel').value;
+  document.getElementById('runBtn').disabled=true;
+  document.getElementById('stopBtn').style.display='';
+  shProg('runProg');sp('runFill',0);
+  document.getElementById('runLog').innerHTML='';
+
+  const job={id:'manual',name:'Manual Sync',datasets:[...S.selDS],periodType:'custom',ouLevel,cron:'',schedType:'manual',
+    _customPP:pp};
+
+  // Override period param for manual
+  const origBPP=buildPeriodParam;
+  await execJobCustom(job,'runLog','runFill',pp);
+}
+
+async function execJobCustom(job,logId,fillId,pp){
+  if(S.running){ntf('Sync already running','e');return;}
+  S.running=true;S.stopFlag=false;
+  const start=Date.now();
+  const lgg=(msg,t)=>lg(logId,msg,t);
+
+  try{
+    const dsIds=job.datasets;
+    lgg(`Starting manual sync: ${dsIds.length} datasets...`,'info');
+    lgg(`Period: ${pp}`,'info');
+
+    lgg('Fetching org units...','info');
+    const ouUrl=`/api/organisationUnits.json?fields=id&paging=false${job.ouLevel?'&level='+job.ouLevel:''}`;
+    const ouR=await srcGet(ouUrl);
+    if(!ouR.ok)throw new Error('Org units: '+ouR.status);
+    const ouD=await ouR.json();
+    const ouIds=(ouD.organisationUnits||[]).map(o=>o.id);
+    lgg(`Found ${ouIds.length} org units`,'info');
+    sp(fillId,10);
+
+    const B=S.batchSize;
+    const batches=[];
+    for(let i=0;i<ouIds.length;i+=B)batches.push(ouIds.slice(i,i+B));
+    lgg(`Pulling data in ${batches.length} batches...`,'info');
+
+    let allVals=[];
+    for(let i=0;i<batches.length;i++){
+      if(S.stopFlag){lgg('Stopped by user','warning');break;}
+      sp(fillId,Math.round(10+(i/batches.length)*60));
+      const url=`/api/dataValueSets.json?dataSet=${dsIds.join(',')}&orgUnit=${batches[i].join(',')}&${pp}`;
+      const r=await srcGet(url);
+      if(r.ok){const d=await r.json();if(d.dataValues)allVals=allVals.concat(d.dataValues);}
+      if((i+1)%10===0||(i+1)===batches.length)lgg(`Batch ${i+1}/${batches.length} — ${allVals.length} values`,'info');
+      await new Promise(r=>setTimeout(r,S.batchDelay));
+    }
+
+    lgg(`✅ Pulled ${allVals.length} values from source`,'success');
+    sp(fillId,75);
+    lgg('Pushing to NMDR target...','info');
+
+    let imported=0,updated=0,failed=0;
+    const TB=1000;
+    for(let i=0;i<allVals.length;i+=TB){
+      if(S.stopFlag)break;
+      sp(fillId,Math.round(75+(i/Math.max(allVals.length,1))*22));
+      const r=await tgtReq(`/api/dataValueSets?strategy=${S.importStrategy}&async=false`,'POST',{dataValues:allVals.slice(i,i+TB)});
+      if(r.ok||r.status===409){let d={};try{d=await r.json();}catch(e){}imported+=(d.importCount?.imported||0);updated+=(d.importCount?.updated||0);}
+      else{failed++;lgg(`Push batch ${Math.floor(i/TB)+1} failed: ${r.status}`,'error');}
+      await new Promise(r=>setTimeout(r,60));
+    }
+
+    sp(fillId,100);
+    const dur=Math.round((Date.now()-start)/1000);
+    lgg('═══════════════════════════════════════','success');
+    lgg(`✅ SYNC COMPLETE in ${dur}s`,'success');
+    lgg(`   Imported: ${imported}  Updated: ${updated}  Failed batches: ${failed}`,'success');
+    lgg('═══════════════════════════════════════','success');
+
+    S.history.unshift({ts:new Date().toLocaleString(),job:'Manual Sync',datasets:dsIds.length,period:pp,values:imported+updated,duration:dur+'s',status:'success'});
+    if(S.history.length>50)S.history.pop();
+    localStorage.setItem('nmdr_history',JSON.stringify(S.history));
+    act(`Manual sync done: ${imported+updated} values in ${dur}s`,'success');
+    ntf(`Done: ${imported} imported, ${updated} updated`,'s');
+    updateDashboard();
+  }catch(e){
+    lgg('ERROR: '+e.message,'error');
+    act('Manual sync error: '+e.message,'error');
+    S.history.unshift({ts:new Date().toLocaleString(),job:'Manual Sync',datasets:job.datasets.length,period:pp,values:0,duration:'—',status:'error'});
+    localStorage.setItem('nmdr_history',JSON.stringify(S.history));
+    ntf('Sync failed: '+e.message,'e');
+  }finally{
+    S.running=false;
+    document.getElementById('runBtn').disabled=false;
+    document.getElementById('stopBtn').style.display='none';
+  }
+}
+
+function stopSync(){S.stopFlag=true;ntf('Stopping after current batch...','i');}
+
+// ── HISTORY ────────────────────────────────────────────────────────────────
+function renderHistory(){
+  const tbody=document.getElementById('histBody');
+  if(!S.history.length){tbody.innerHTML='<tr><td colspan="7" style="text-align:center;padding:20px;color:var(--muted);">No sync history yet</td></tr>';return;}
+  tbody.innerHTML=S.history.map(h=>`<tr>
+    <td>${h.ts}</td><td>${h.job}</td><td>${h.datasets}</td><td style="font-size:10px;">${h.period.substring(0,40)}</td>
+    <td><strong>${h.values.toLocaleString()}</strong></td><td>${h.duration}</td>
+    <td><span class="badge ${h.status}">${h.status}</span></td>
+  </tr>`).join('');
+}
+
+function clrHistory(){
+  if(!confirm('Clear all sync history?'))return;
+  S.history=[];localStorage.setItem('nmdr_history',JSON.stringify(S.history));
+  renderHistory();updateDashboard();ntf('History cleared','i');
+}
+
+// Start all saved job timers on load
+setTimeout(()=>{startAllTimers();renderJobs();},500);
+</script>
+</body>
+</html>

@@ -1,0 +1,29 @@
+{
+  "appType": "DASHBOARD_WIDGET",
+  "version": "2.0.0",
+  "name": "NMCP DQA Dashboard",
+  "short_name": "DQA Dashboard",
+  "description": "National Malaria Control Programme – Data Quality Assessment Dashboard. Live malaria indicator analytics with scoring, coherency, outlier detection and HF browser.",
+  "launch_path": "index.html",
+  "installs_directly": true,
+  "icons": {
+    "16":  "icons/icon-16.png",
+    "48":  "icons/icon-48.png",
+    "128": "icons/icon-128.png"
+  },
+  "developer": {
+    "name":    "ICF-SL (Informatics Consultancy Firm – Sierra Leone)",
+    "url":     "https://icf-sl.org",
+    "email":   "info@icf-sl.org",
+    "company": "ICF-SL"
+  },
+  "defaultLocale": "en",
+  "activities": {
+    "dhis": {
+      "href": "*"
+    }
+  },
+  "authorities": [],
+  "core_app": false,
+  "dataStoreNamespace": "nmcp-dqa"
+}

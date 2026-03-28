@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Indicator DE Sync | ICF-SL</title>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Roboto:wght@300;400;500&display=swap" rel="stylesheet"/>
+<style>
+  :root{--navy:#004080;--navy-dark:#002d5a;--navy-light:#0055aa;--gold:#c9a84c;--gold-light:#e8c96a;--bg:#f0f4f8;--card-bg:#fff;--border:#ccd6e0;--text:#1a2733;--text-muted:#5a7080;--success:#1a7a4a;--success-bg:#e6f5ed;--error:#c0392b;--error-bg:#fdecea;--warning:#c87a00;--warning-bg:#fff8e1;--info-bg:#e8f0fe}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Roboto',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+  header{background:var(--navy);border-bottom:4px solid var(--gold);padding:0 28px;display:flex;align-items:center;justify-content:space-between;height:60px;position:sticky;top:0;z-index:100;box-shadow:0 2px 12px rgba(0,0,0,.3)}
+  .logo-box{background:var(--gold);color:var(--navy-dark);font-family:'Oswald',sans-serif;font-weight:700;font-size:12px;padding:3px 8px;letter-spacing:1px;border-radius:2px}
+  .header-title{font-family:'Oswald',sans-serif;color:#fff;font-size:17px;font-weight:600;letter-spacing:1px;margin-left:12px}
+  .header-title span{color:var(--gold)}
+  .user-chip{font-size:11px;color:rgba(255,255,255,.75);font-family:'Oswald',sans-serif;letter-spacing:.5px}
+  .conn-dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:#80ff80;margin-right:5px;animation:pulse 2s infinite}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+  .container{max-width:1080px;margin:0 auto;padding:24px 16px}
+  .card{background:var(--card-bg);border:1px solid var(--border);border-top:3px solid var(--navy);border-radius:4px;box-shadow:0 2px 8px rgba(0,0,0,.05);margin-bottom:18px;overflow:hidden}
+  .card-header{background:var(--navy);padding:9px 18px;display:flex;align-items:center;gap:10px}
+  .card-header h3{font-family:'Oswald',sans-serif;color:#fff;font-size:13px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase}
+  .card-step{background:var(--gold);color:var(--navy-dark);font-family:'Oswald',sans-serif;font-weight:700;font-size:11px;width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+  .card-body{padding:18px}
+  .form-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:12px}
+  .form-row.three{grid-template-columns:1fr 1fr 1fr}
+  .form-row.four{grid-template-columns:1fr 1fr 1fr auto}
+  .form-group{display:flex;flex-direction:column;gap:4px}
+  label{font-size:10px;font-family:'Oswald',sans-serif;font-weight:500;color:var(--navy);letter-spacing:.8px;text-transform:uppercase}
+  input,select{border:1px solid var(--border);border-radius:3px;padding:7px 9px;font-family:'Roboto',sans-serif;font-size:13px;color:var(--text);background:#fafbfc;transition:border-color .2s;outline:none;width:100%}
+  input:focus,select:focus{border-color:var(--navy);background:#fff}
+  .lbl-count{color:var(--gold);font-size:9px;letter-spacing:.5px;margin-left:3px;font-family:'Oswald',sans-serif}
+  .reload-btn{background:none;border:none;cursor:pointer;color:var(--gold);font-size:12px;margin-left:3px;vertical-align:middle;padding:0}
+  .reload-btn:hover{color:var(--gold-light)}
+  .btn{font-family:'Oswald',sans-serif;font-weight:600;font-size:12px;letter-spacing:1px;text-transform:uppercase;border:none;border-radius:3px;padding:8px 16px;cursor:pointer;transition:all .2s;display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
+  .btn-primary{background:var(--navy);color:#fff}
+  .btn-primary:hover:not(:disabled){background:var(--navy-light)}
+  .btn-gold{background:var(--gold);color:var(--navy-dark)}
+  .btn-gold:hover:not(:disabled){background:var(--gold-light)}
+  .btn-outline{background:transparent;color:var(--navy);border:1px solid var(--navy)}
+  .btn-outline:hover{background:var(--info-bg)}
+  .btn-sm{padding:5px 10px;font-size:11px}
+  .btn:disabled{opacity:.45;cursor:not-allowed}
+  .chips{display:flex;flex-wrap:wrap;gap:5px;margin-top:6px}
+  .chip{background:var(--info-bg);border:1px solid #b0c4de;color:var(--navy);font-size:11px;font-family:'Oswald',sans-serif;padding:2px 8px;border-radius:10px;display:flex;align-items:center;gap:4px}
+  .chip button{background:none;border:none;cursor:pointer;color:var(--navy);font-size:12px;line-height:1;padding:0}
+  .mtable{width:100%;border-collapse:collapse;font-size:12px;margin-top:8px}
+  .mtable th{font-family:'Oswald',sans-serif;font-size:10px;letter-spacing:1px;text-transform:uppercase;color:#fff;background:var(--navy);padding:7px 10px;text-align:left}
+  .mtable td{padding:7px 10px;border-bottom:1px solid var(--border);vertical-align:middle}
+  .mtable tr:hover td{background:var(--info-bg)}
+  .uid-chip{font-family:monospace;font-size:10px;background:#eef2f7;padding:1px 5px;border-radius:3px;color:#3a5070;display:inline-block;max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .rm-btn{background:none;border:1px solid #e0c0c0;color:var(--error);font-size:13px;cursor:pointer;border-radius:3px;width:24px;height:24px;display:flex;align-items:center;justify-content:center}
+  .rm-btn:hover{background:var(--error-bg)}
+  .prog-wrap{margin:10px 0}
+  .prog-lbl{font-size:11px;color:var(--text-muted);margin-bottom:4px}
+  .prog-outer{background:#e0e8f0;border-radius:4px;height:9px;overflow:hidden}
+  .prog-inner{height:100%;background:linear-gradient(90deg,var(--navy),var(--navy-light));border-radius:4px;transition:width .3s}
+  .logbox{background:#0a1520;color:#a8d8a8;font-family:monospace;font-size:11px;padding:12px;border-radius:4px;max-height:200px;overflow-y:auto;line-height:1.7}
+  .log-err{color:#ff8080}.log-warn{color:#ffd080}.log-info{color:#80c8ff}.log-ok{color:#80ff80}
+  .rtable{width:100%;border-collapse:collapse;font-size:11px}
+  .rtable th{font-family:'Oswald',sans-serif;font-size:10px;letter-spacing:1px;text-transform:uppercase;background:var(--navy-dark);color:#fff;padding:6px 8px;text-align:left}
+  .rtable td{padding:5px 8px;border-bottom:1px solid var(--border)}
+  .rtable tr:hover td{background:#f5f8ff}
+  .pill{display:inline-block;padding:1px 7px;border-radius:8px;font-size:10px;font-family:'Oswald',sans-serif}
+  .pill-ok{background:var(--success-bg);color:var(--success)}
+  .pill-err{background:var(--error-bg);color:var(--error)}
+  .pill-skip{background:#f0f0f0;color:#888}
+  .stat-row{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px}
+  .stat-box{background:var(--navy);border-radius:4px;padding:10px 12px;text-align:center}
+  .stat-num{font-family:'Oswald',sans-serif;font-size:24px;color:var(--gold);font-weight:700;line-height:1}
+  .stat-lbl{font-size:9px;color:rgba(255,255,255,.65);text-transform:uppercase;letter-spacing:.8px;margin-top:2px}
+  .alert{padding:9px 12px;border-radius:3px;font-size:12px;display:flex;align-items:flex-start;gap:7px;margin-bottom:12px}
+  .alert-warn{background:var(--warning-bg);border-left:3px solid var(--warning);color:var(--warning)}
+  .divider{border:none;border-top:1px solid var(--border);margin:14px 0}
+  .hidden{display:none!important}
+  .text-muted{color:var(--text-muted);font-size:11px}
+  .cfg-list{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+  .cfg-item{background:#f0f4ff;border:1px solid #b0c0e0;border-radius:3px;padding:4px 10px;font-size:11px;font-family:'Oswald',sans-serif;display:flex;align-items:center;gap:6px;color:var(--navy)}
+  .cfg-item .load-btn{cursor:pointer;color:var(--navy-light);font-weight:600;text-decoration:underline;background:none;border:none;font-family:'Oswald',sans-serif;font-size:11px}
+  .cfg-item .del-btn{background:none;border:none;cursor:pointer;font-size:12px;color:var(--text-muted)}
+  footer{text-align:center;padding:16px;font-size:10px;color:var(--text-muted);border-top:1px solid var(--border);margin-top:16px;font-family:'Oswald',sans-serif;letter-spacing:.5px}
+  footer span{color:var(--navy)}
+</style>
+</head>
+<body>
+<header>
+  <div style="display:flex;align-items:center">
+    <div class="logo-box">ICF-SL</div>
+    <div class="header-title">INDICATOR <span>&rarr;</span> DE SYNC</div>
+  </div>
+  <div style="display:flex;align-items:center;gap:16px">
+    <span id="userChip" class="user-chip"><span class="conn-dot"></span>Loading...</span>
+    <span style="font-size:10px;color:rgba(255,255,255,.4);font-family:'Oswald',sans-serif">v1.1 &middot; ICF-SL</span>
+  </div>
+</header>
+<div class="container">
+
+  <div class="card">
+    <div class="card-header">
+      <div class="card-step">1</div>
+      <h3>Indicator to Data Element Mappings</h3>
+      <div style="margin-left:auto;display:flex;gap:6px">
+        <button class="btn btn-sm btn-outline" style="color:#fff;border-color:rgba(255,255,255,.4)" onclick="saveConfig()">Save</button>
+        <button class="btn btn-sm btn-outline" style="color:#fff;border-color:rgba(255,255,255,.4)" onclick="importConfig()">Import</button>
+        <button class="btn btn-sm btn-outline" style="color:#fff;border-color:rgba(255,255,255,.4)" onclick="exportConfig()">Export</button>
+      </div>
+    </div>
+    <div class="card-body">
+      <div id="savedConfigsWrap" class="hidden">
+        <div style="font-family:'Oswald',sans-serif;font-size:11px;color:var(--navy);letter-spacing:.8px;text-transform:uppercase;margin-bottom:6px">Saved Configurations</div>
+        <div id="cfgList" class="cfg-list"></div>
+        <hr class="divider"/>
+      </div>
+      <div class="alert alert-warn">Warning: Target Data Element must be numeric and in an open dataset for the selected periods.</div>
+      <div style="background:#f8fafc;border:1px solid var(--border);border-radius:4px;padding:14px;margin-bottom:14px">
+        <div style="font-family:'Oswald',sans-serif;font-size:11px;color:var(--navy);letter-spacing:1px;margin-bottom:10px;text-transform:uppercase">Add Mapping</div>
+        <div class="form-row three">
+          <div class="form-group">
+            <label>Source Indicator <span id="indCount" class="lbl-count"></span><button class="reload-btn" onclick="loadAllIndicators()" title="Reload">&#8635;</button></label>
+            <select id="indSelect"><option value="">-- Loading... --</option></select>
+          </div>
+          <div class="form-group">
+            <label>Target Data Element <span id="deCount" class="lbl-count"></span><button class="reload-btn" onclick="loadAllDataElements()" title="Reload">&#8635;</button></label>
+            <select id="deSelect"><option value="">-- Loading... --</option></select>
+          </div>
+          <div class="form-group">
+            <label>Category Option Combo <span id="cocCount" class="lbl-count"></span><button class="reload-btn" onclick="loadAllCOCs()" title="Reload">&#8635;</button></label>
+            <select id="cocSelect"><option value="HllvX50cXC0">Default</option></select>
+          </div>
+        </div>
+        <div style="display:flex;justify-content:flex-end">
+          <button class="btn btn-gold" onclick="addMapping()">+ Add Mapping</button>
+        </div>
+      </div>
+      <table class="mtable">
+        <thead><tr><th>#</th><th>Indicator</th><th>Ind UID</th><th style="color:var(--gold)">&rarr;</th><th>Data Element</th><th>DE UID</th><th>COC</th><th></th></tr></thead>
+        <tbody id="mappingRows"><tr><td colspan="8" style="text-align:center;color:var(--text-muted);padding:18px;font-style:italic">No mappings yet</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header"><div class="card-step">2</div><h3>Periods and Organisation Units</h3></div>
+    <div class="card-body">
+      <div class="form-row four">
+        <div class="form-group">
+          <label>Period Type</label>
+          <select id="periodType" onchange="buildPeriodInput()">
+            <option value="monthly">Monthly</option>
+            <option value="quarterly">Quarterly</option>
+            <option value="yearly">Yearly</option>
+            <option value="custom">Custom</option>
+          </select>
+        </div>
+        <div class="form-group" id="periodInputWrap">
+          <label>Period</label>
+          <input type="month" id="periodVal"/>
+        </div>
+        <div class="form-group">
+          <label>Bulk Add</label>
+          <select id="bulkRange" onchange="bulkAddPeriods()">
+            <option value="">-- quick add --</option>
+            <option value="current_year">All months this year</option>
+            <option value="last_year">All months last year</option>
+            <option value="last_12">Last 12 months</option>
+            <option value="last_4q">Last 4 quarters</option>
+          </select>
+        </div>
+        <div class="form-group" style="justify-content:flex-end;flex-direction:row;align-items:flex-end">
+          <button class="btn btn-outline btn-sm" onclick="addPeriod()">+ Add</button>
+        </div>
+      </div>
+      <div id="periodChips" class="chips"><span class="text-muted">No periods added</span></div>
+      <hr class="divider"/>
+      <div class="form-row three">
+        <div class="form-group">
+          <label>Filter by Level <span id="ouLevelCount" class="lbl-count"></span></label>
+          <select id="ouLevelFilter" onchange="filterOUDropdown()">
+            <option value="">-- All Levels --</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Select Org Unit <span id="ouCount" class="lbl-count"></span><button class="reload-btn" onclick="loadAllOUs()" title="Reload">&#8635;</button></label>
+          <select id="ouSelect" onchange="addOUFromSelect()">
+            <option value="">-- Loading... --</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Quick Add</label>
+          <button class="btn btn-outline btn-sm" onclick="addUserOUs()" style="margin-top:4px">+ My Assigned Org Units</button>
+          <button class="btn btn-outline btn-sm" onclick="addAllFilteredOUs()" style="margin-top:6px">+ All in Current Filter</button>
+        </div>
+      </div>
+      <div id="ouChips" class="chips"><span class="text-muted">None -- will use user org units</span></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header"><div class="card-step">3</div><h3>Run Sync</h3></div>
+    <div class="card-body">
+      <div class="form-row three">
+        <div class="form-group">
+          <label>Mode</label>
+          <select id="dryRun">
+            <option value="true" selected>Dry Run -- Preview only</option>
+            <option value="false">Live -- Write to DHIS2</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Request Delay (ms)</label>
+          <input type="number" id="batchDelay" value="150" min="0" max="3000"/>
+        </div>
+        <div class="form-group" style="justify-content:flex-end;flex-direction:row;align-items:flex-end;gap:8px">
+          <button class="btn btn-primary" id="runBtn" onclick="runSync()">RUN</button>
+          <button class="btn btn-outline btn-sm" id="abortBtn" onclick="abortSync()" style="display:none">Abort</button>
+          <button class="btn btn-outline btn-sm" onclick="clearLog()">Clear</button>
+        </div>
+      </div>
+      <div id="progressWrap" class="prog-wrap hidden">
+        <div class="prog-lbl" id="progressLabel">Processing...</div>
+        <div class="prog-outer"><div class="prog-inner" id="progressBar" style="width:0%"></div></div>
+      </div>
+      <div class="logbox" id="logBox"><span class="log-info">// Ready. Add mappings, periods, org units, then run.</span></div>
+    </div>
+  </div>
+
+  <div class="card hidden" id="resultsCard">
+    <div class="card-header">
+      <div class="card-step">&#10003;</div><h3>Results</h3>
+      <div style="margin-left:auto"><button class="btn btn-sm btn-outline" style="color:#fff;border-color:rgba(255,255,255,.4)" onclick="exportCSV()">Export CSV</button></div>
+    </div>
+    <div class="card-body">
+      <div class="stat-row" id="statRow"></div>
+      <div style="max-height:300px;overflow-y:auto">
+        <table class="rtable">
+          <thead><tr><th>Indicator</th><th>Data Element</th><th>Period</th><th>Org Unit</th><th>Value</th><th>Status</th></tr></thead>
+          <tbody id="resultsBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+</div>
+<footer><span>ICF-SL</span> &middot; Informatics Consultancy Firm Sierra Leone &middot; DHIS2 Utility Apps &middot; 2026</footer>
+<input type="file" id="importFile" accept=".json" class="hidden" onchange="loadImportedConfig(event)"/>
+
+<script>
+var API_BASE='';
+var abortFlag=false;
+var mappings=[];
+var periods=[];
+var orgUnits=[];
+var results=[];
+var allOUs=[];
+
+async function initApp(){
+  try{
+    var m=await fetch('manifest.webapp').then(function(r){return r.json();});
+    var href=m.activities&&m.activities.dhis&&m.activities.dhis.href;
+    API_BASE=(href&&href!=='*')?href.replace(/\/$/,''):'..';
+  }catch(e){API_BASE='..';}
+  try{
+    var u=await dhisGet('/api/me.json?fields=id,name,username,organisationUnits[id,name,level]');
+    document.getElementById('userChip').innerHTML='<span class="conn-dot"></span>'+u.name+' ('+u.username+')';
+    window._userOUs=u.organisationUnits||[];
+    log('Logged in as '+u.name,'ok');
+  }catch(e){
+    document.getElementById('userChip').innerHTML='<span style="color:#ffd080">Not connected</span>';
+    log('Auth error: '+e.message,'err');
+  }
+  await Promise.all([loadAllIndicators(),loadAllDataElements(),loadAllCOCs(),loadAllOUs(),loadOULevels()]);
+  renderSavedConfigs();
+}
+
+async function dhisGet(path){
+  var r=await fetch(API_BASE+path,{credentials:'include',headers:{'Accept':'application/json'}});
+  if(!r.ok)throw new Error('HTTP '+r.status);
+  return r.json();
+}
+async function dhisPost(path,body){
+  var r=await fetch(API_BASE+path,{method:'POST',credentials:'include',headers:{'Content-Type':'application/json','Accept':'application/json'},body:JSON.stringify(body)});
+  return r.json();
+}
+
+async function loadAllIndicators(){
+  var sel=document.getElementById('indSelect');
+  var cnt=document.getElementById('indCount');
+  sel.innerHTML='<option value="">-- Loading... --</option>';
+  try{
+    var r=await dhisGet('/api/indicators.json?fields=id,name&paging=false&order=name:asc');
+    var items=r.indicators||[];
+    sel.innerHTML='<option value="">-- Select Indicator --</option>'+items.map(function(i){return '<option value="'+i.id+'">'+i.name+'</option>';}).join('');
+    cnt.textContent='('+items.length+')';
+    log('Indicators loaded: '+items.length,'ok');
+  }catch(e){sel.innerHTML='<option value="">-- Load failed --</option>';log('Indicators error: '+e.message,'err');}
+}
+
+async function loadAllDataElements(){
+  var sel=document.getElementById('deSelect');
+  var cnt=document.getElementById('deCount');
+  sel.innerHTML='<option value="">-- Loading... --</option>';
+  try{
+    var r=await dhisGet('/api/dataElements.json?fields=id,name&paging=false&order=name:asc&filter=domainType:eq:AGGREGATE');
+    var items=r.dataElements||[];
+    sel.innerHTML='<option value="">-- Select Data Element --</option>'+items.map(function(i){return '<option value="'+i.id+'">'+i.name+'</option>';}).join('');
+    cnt.textContent='('+items.length+')';
+    log('Data elements loaded: '+items.length,'ok');
+  }catch(e){sel.innerHTML='<option value="">-- Load failed --</option>';log('DE error: '+e.message,'err');}
+}
+
+async function loadAllCOCs(){
+  var sel=document.getElementById('cocSelect');
+  var cnt=document.getElementById('cocCount');
+  try{
+    var r=await dhisGet('/api/categoryOptionCombos.json?fields=id,name&paging=false&order=name:asc');
+    var items=r.categoryOptionCombos||[];
+    sel.innerHTML=items.map(function(i){return '<option value="'+i.id+'"'+(i.id==='HllvX50cXC0'?' selected':'')+'>'+i.name+'</option>';}).join('');
+    cnt.textContent='('+items.length+')';
+    log('COCs loaded: '+items.length,'ok');
+  }catch(e){sel.innerHTML='<option value="HllvX50cXC0">Default</option>';log('COC error: '+e.message,'err');}
+}
+
+async function loadAllOUs(){
+  var sel=document.getElementById('ouSelect');
+  var cnt=document.getElementById('ouCount');
+  sel.innerHTML='<option value="">-- Loading... --</option>';
+  try{
+    var r=await dhisGet('/api/organisationUnits.json?fields=id,name,level&paging=false&order=name:asc');
+    allOUs=r.organisationUnits||[];
+    renderOUDropdown(allOUs);
+    cnt.textContent='('+allOUs.length+')';
+    log('Org units loaded: '+allOUs.length,'ok');
+  }catch(e){sel.innerHTML='<option value="">-- Load failed --</option>';log('OU error: '+e.message,'err');}
+}
+
+async function loadOULevels(){
+  try{
+    var r=await dhisGet('/api/organisationUnitLevels.json?fields=level,name&order=level:asc&paging=false');
+    var sel=document.getElementById('ouLevelFilter');
+    var cnt=document.getElementById('ouLevelCount');
+    var levels=r.organisationUnitLevels||[];
+    levels.forEach(function(l){
+      var o=document.createElement('option');
+      o.value=l.level;o.textContent='Level '+l.level+' - '+l.name;sel.appendChild(o);
+    });
+    cnt.textContent='('+levels.length+')';
+  }catch(e){}
+}
+
+function renderOUDropdown(items){
+  var sel=document.getElementById('ouSelect');
+  sel.innerHTML='<option value="">-- Select Org Unit ('+items.length+') --</option>'+
+    items.map(function(i){return '<option value="'+i.id+'" data-name="'+i.name.replace(/"/g,'&quot;')+'">'+i.name+'</option>';}).join('');
+}
+
+function filterOUDropdown(){
+  var level=document.getElementById('ouLevelFilter').value;
+  var filtered=level?allOUs.filter(function(o){return String(o.level)===level;}):allOUs;
+  renderOUDropdown(filtered);
+  document.getElementById('ouCount').textContent='('+filtered.length+')';
+}
+
+function addMapping(){
+  var indSel=document.getElementById('indSelect');
+  var deSel=document.getElementById('deSelect');
+  var cocSel=document.getElementById('cocSelect');
+  var indUid=indSel.value;
+  var indName=indSel.options[indSel.selectedIndex]?indSel.options[indSel.selectedIndex].text:'';
+  var deUid=deSel.value;
+  var deName=deSel.options[deSel.selectedIndex]?deSel.options[deSel.selectedIndex].text:'';
+  var cocUid=cocSel.value||'HllvX50cXC0';
+  var cocName=cocSel.options[cocSel.selectedIndex]?cocSel.options[cocSel.selectedIndex].text:cocUid;
+  if(!indUid||!deUid){alert('Select both an indicator and a data element.');return;}
+  for(var x=0;x<mappings.length;x++){if(mappings[x].indUid===indUid&&mappings[x].deUid===deUid){alert('Mapping already exists.');return;}}
+  mappings.push({indUid:indUid,indName:indName,deUid:deUid,deName:deName,cocUid:cocUid,cocName:cocName});
+  renderMappings();
+  indSel.value='';deSel.value='';
+}
+
+function removeMapping(i){mappings.splice(i,1);renderMappings();}
+function renderMappings(){
+  var tb=document.getElementById('mappingRows');
+  if(!mappings.length){tb.innerHTML='<tr><td colspan="8" style="text-align:center;color:var(--text-muted);padding:18px;font-style:italic">No mappings yet</td></tr>';return;}
+  tb.innerHTML=mappings.map(function(m,i){
+    return '<tr><td>'+(i+1)+'</td><td>'+m.indName+'</td><td><span class="uid-chip" title="'+m.indUid+'">'+m.indUid+'</span></td><td style="color:var(--gold);font-weight:bold;text-align:center">&rarr;</td><td>'+m.deName+'</td><td><span class="uid-chip" title="'+m.deUid+'">'+m.deUid+'</span></td><td><span class="uid-chip" title="'+m.cocUid+'">'+m.cocName+'</span></td><td><button class="rm-btn" onclick="removeMapping('+i+')">x</button></td></tr>';
+  }).join('');
+}
+
+function buildPeriodInput(){
+  var t=document.getElementById('periodType').value;
+  var w=document.getElementById('periodInputWrap');
+  if(t==='monthly')w.innerHTML='<label>Month</label><input type="month" id="periodVal"/>';
+  else if(t==='yearly')w.innerHTML='<label>Year</label><input type="number" id="periodVal" value="'+new Date().getFullYear()+'" min="2000" max="2035"/>';
+  else w.innerHTML='<label>Period Code</label><input type="text" id="periodVal" placeholder="e.g. 2024Q1"/>';
+}
+function addPeriod(){
+  var t=document.getElementById('periodType').value;
+  var el=document.getElementById('periodVal');
+  if(!el||!el.value)return;
+  var code=t==='monthly'?el.value.replace('-',''):el.value;
+  if(periods.indexOf(code)<0){periods.push(code);renderPeriodChips();}
+}
+function bulkAddPeriods(){
+  var range=document.getElementById('bulkRange').value;
+  if(!range)return;
+  var now=new Date();var y=now.getFullYear();var toAdd=[];
+  if(range==='current_year'){for(var m=1;m<=12;m++)toAdd.push(y+''+String(m).padStart(2,'0'));}
+  else if(range==='last_year'){for(var m=1;m<=12;m++)toAdd.push((y-1)+''+String(m).padStart(2,'0'));}
+  else if(range==='last_12'){for(var i=11;i>=0;i--){var d=new Date(y,now.getMonth()-i,1);toAdd.push(d.getFullYear()+''+String(d.getMonth()+1).padStart(2,'0'));}}
+  else if(range==='last_4q'){var q=Math.ceil((now.getMonth()+1)/3);for(var i=3;i>=0;i--){var qq=q-i;var yy=y;if(qq<=0){qq+=4;yy--;}toAdd.push(yy+'Q'+qq);}}
+  toAdd.forEach(function(p){if(periods.indexOf(p)<0)periods.push(p);});
+  renderPeriodChips();
+  document.getElementById('bulkRange').value='';
+}
+function removePeriod(p){var i=periods.indexOf(p);if(i>=0)periods.splice(i,1);renderPeriodChips();}
+function renderPeriodChips(){
+  var el=document.getElementById('periodChips');
+  el.innerHTML=periods.map(function(p){return '<span class="chip">'+p+'<button onclick="removePeriod(\''+p+'\')">x</button></span>';}).join('')||'<span class="text-muted">No periods added</span>';
+}
+
+function addOU(uid,name){
+  for(var i=0;i<orgUnits.length;i++)if(orgUnits[i].uid===uid)return;
+  orgUnits.push({uid:uid,name:name});renderOUChips();
+}
+function removeOU(uid){for(var i=0;i<orgUnits.length;i++){if(orgUnits[i].uid===uid){orgUnits.splice(i,1);break;}}renderOUChips();}
+function addOUFromSelect(){
+  var sel=document.getElementById('ouSelect');
+  var uid=sel.value;if(!uid)return;
+  var opt=sel.options[sel.selectedIndex];
+  var name=opt&&opt.dataset&&opt.dataset.name?opt.dataset.name:(opt?opt.text:uid);
+  addOU(uid,name);sel.value='';
+}
+function addUserOUs(){(window._userOUs||[]).forEach(function(o){addOU(o.id||o.uid,o.name);});}
+function addAllFilteredOUs(){
+  var level=document.getElementById('ouLevelFilter').value;
+  var filtered=level?allOUs.filter(function(o){return String(o.level)===level;}):allOUs;
+  if(filtered.length>500&&!confirm('Add all '+filtered.length+' org units?'))return;
+  filtered.forEach(function(o){addOU(o.id,o.name);});
+  log('Added '+filtered.length+' org units.','ok');
+}
+function renderOUChips(){
+  var el=document.getElementById('ouChips');
+  if(!orgUnits.length){el.innerHTML='<span class="text-muted">None -- will use user org units</span>';return;}
+  el.innerHTML=orgUnits.map(function(o){return '<span class="chip">'+o.name+'<button onclick="removeOU(\''+o.uid+'\')">x</button></span>';}).join('');
+}
+
+async function runSync(){
+  if(!mappings.length){alert('Add at least one mapping.');return;}
+  if(!periods.length){alert('Add at least one period.');return;}
+  var dryRun=document.getElementById('dryRun').value==='true';
+  var delay=parseInt(document.getElementById('batchDelay').value)||150;
+  var ous=orgUnits.length?orgUnits:(window._userOUs||[]).map(function(o){return{uid:o.id||o.uid,name:o.name};});
+  if(!ous.length){log('No org units available.','err');return;}
+  abortFlag=false;results=[];
+  document.getElementById('runBtn').disabled=true;
+  document.getElementById('abortBtn').style.display='inline-flex';
+  document.getElementById('progressWrap').classList.remove('hidden');
+  document.getElementById('resultsCard').classList.add('hidden');
+  var total=mappings.length*periods.length*ous.length;
+  var done=0;
+  log('=== START | '+total+' ops | '+(dryRun?'DRY RUN':'LIVE WRITE')+' ===','info');
+  for(var mi=0;mi<mappings.length;mi++){
+    var m=mappings[mi];
+    for(var pi=0;pi<periods.length;pi++){
+      var period=periods[pi];
+      if(abortFlag){log('Aborted.','warn');break;}
+      var ouList=ous.map(function(o){return o.uid;}).join(';');
+      var ouValueMap={};
+      try{
+        var data=await dhisGet('/api/analytics.json?dimension=dx:'+m.indUid+'&dimension=pe:'+period+'&dimension=ou:'+ouList);
+        (data.rows||[]).forEach(function(r){ouValueMap[r[2]]=r[3];});
+        log(m.indName+' / '+period+' -> '+Object.keys(ouValueMap).length+' values','info');
+      }catch(e){log('Analytics error '+m.indName+'/'+period+': '+e.message,'err');}
+      for(var oi=0;oi<ous.length;oi++){
+        var ou=ous[oi];
+        if(abortFlag)break;
+        var value=ouValueMap[ou.uid];
+        var status='ok';var msg=dryRun?'DRY RUN':'Written';
+        if(value===undefined||value===null){
+          status='skip';msg='No analytics value';
+          results.push({m:m,period:period,ou:ou,value:'--',status:status,msg:msg});
+          done++;updateProgress(done,total);continue;
+        }
+        if(!dryRun){
+          try{
+            var resp=await dhisPost('/api/dataValueSets',{dataValues:[{dataElement:m.deUid,categoryOptionCombo:m.cocUid,period:period,orgUnit:ou.uid,value:String(value)}]});
+            if(resp.status==='SUCCESS'||(resp.importCount&&resp.importCount.imported>0)||(resp.importCount&&resp.importCount.updated>0)){
+              msg='i:'+(resp.importCount?resp.importCount.imported:0)+' u:'+(resp.importCount?resp.importCount.updated:0);
+            }else{status='err';msg=resp.description||(resp.conflicts||[]).map(function(c){return c.value;}).join('; ')||'Error';}
+          }catch(e){status='err';msg=e.message;}
+        }
+        results.push({m:m,period:period,ou:ou,value:value,status:status,msg:msg});
+        log(m.indName+' -> '+m.deName+' | '+period+' | '+ou.name+' | '+value+' | '+(status==='ok'?'OK':'ERR')+' '+msg,status);
+        done++;updateProgress(done,total);
+        if(delay>0)await sleep(delay);
+      }
+    }
+    if(abortFlag)break;
+  }
+  var ok=results.filter(function(r){return r.status==='ok';}).length;
+  var err=results.filter(function(r){return r.status==='err';}).length;
+  var skip=results.filter(function(r){return r.status==='skip';}).length;
+  log('=== DONE | OK:'+ok+' ERR:'+err+' SKIP:'+skip+' ===',ok>0&&err===0?'ok':'warn');
+  document.getElementById('runBtn').disabled=false;
+  document.getElementById('abortBtn').style.display='none';
+  renderResults();
+}
+function abortSync(){abortFlag=true;}
+function updateProgress(done,total){var pct=Math.round(done/total*100);document.getElementById('progressBar').style.width=pct+'%';document.getElementById('progressLabel').textContent=done+'/'+total+' ('+pct+'%)';}
+function sleep(ms){return new Promise(function(r){setTimeout(r,ms);});}
+
+function renderResults(){
+  document.getElementById('resultsCard').classList.remove('hidden');
+  var ok=results.filter(function(r){return r.status==='ok';}).length;
+  var err=results.filter(function(r){return r.status==='err';}).length;
+  var skip=results.filter(function(r){return r.status==='skip';}).length;
+  document.getElementById('statRow').innerHTML='<div class="stat-box"><div class="stat-num">'+results.length+'</div><div class="stat-lbl">Total</div></div><div class="stat-box"><div class="stat-num" style="color:#80ff80">'+ok+'</div><div class="stat-lbl">Success</div></div><div class="stat-box"><div class="stat-num" style="color:#ff8080">'+err+'</div><div class="stat-lbl">Errors</div></div><div class="stat-box"><div class="stat-num" style="color:#ffd080">'+skip+'</div><div class="stat-lbl">Skipped</div></div>';
+  document.getElementById('resultsBody').innerHTML=results.map(function(r){
+    var pillClass=r.status==='ok'?'pill-ok':r.status==='err'?'pill-err':'pill-skip';
+    var pillText=r.status==='ok'?'OK':r.status==='err'?'ERR':'SKIP';
+    return '<tr><td>'+r.m.indName+'</td><td>'+r.m.deName+'</td><td>'+r.period+'</td><td>'+r.ou.name+'</td><td>'+r.value+'</td><td><span class="pill '+pillClass+'">'+pillText+'</span><span style="font-size:10px;color:var(--text-muted);margin-left:4px">'+(r.msg||'')+'</span></td></tr>';
+  }).join('');
+  document.getElementById('resultsCard').scrollIntoView({behavior:'smooth'});
+}
+function exportCSV(){
+  var h=['Indicator','Ind UID','Data Element','DE UID','Period','Org Unit','OU UID','Value','Status','Message'];
+  var rows=results.map(function(r){return[r.m.indName,r.m.indUid,r.m.deName,r.m.deUid,r.period,r.ou.name,r.ou.uid,r.value,r.status,r.msg];});
+  var csv=[h].concat(rows).map(function(r){return r.map(function(v){return'"'+String(v||'').replace(/"/g,'""')+'"';}).join(',');}).join('\n');
+  var a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));a.download='ind_de_sync_'+new Date().toISOString().slice(0,10)+'.csv';a.click();
+}
+
+function log(msg,type){
+  var b=document.getElementById('logBox');
+  var d=document.createElement('div');
+  var cls={ok:'log-ok',err:'log-err',warn:'log-warn',info:'log-info'};
+  d.className=cls[type]||'';
+  d.textContent='['+new Date().toLocaleTimeString()+'] '+msg;
+  b.appendChild(d);b.scrollTop=b.scrollHeight;
+}
+function clearLog(){document.getElementById('logBox').innerHTML='<span class="log-info">// Log cleared.</span>';}
+
+function esc(s){return(s||'').replace(/'/g,"&#39;").replace(/"/g,'&quot;');}
+function getConfigObj(){return{mappings:mappings.slice(),periods:periods.slice(),orgUnits:orgUnits.slice(),savedAt:new Date().toISOString()};}
+function saveConfig(){
+  var name=prompt('Config name:');if(!name)return;
+  var saved=JSON.parse(localStorage.getItem('icfsl_ind_sync')||'{}');
+  saved[name]=getConfigObj();localStorage.setItem('icfsl_ind_sync',JSON.stringify(saved));
+  log('Config "'+name+'" saved.','ok');renderSavedConfigs();
+}
+function loadConfig(name){
+  var cfg=JSON.parse(localStorage.getItem('icfsl_ind_sync')||'{}')[name];if(!cfg)return;
+  mappings=[];periods=[];orgUnits=[];
+  (cfg.mappings||[]).forEach(function(m){mappings.push(m);});
+  (cfg.periods||[]).forEach(function(p){periods.push(p);});
+  (cfg.orgUnits||[]).forEach(function(o){orgUnits.push(o);});
+  renderMappings();renderPeriodChips();renderOUChips();
+  log('Config "'+name+'" loaded.','ok');
+}
+function deleteConfig(name){
+  if(!confirm('Delete "'+name+'"?'))return;
+  var saved=JSON.parse(localStorage.getItem('icfsl_ind_sync')||'{}');
+  delete saved[name];localStorage.setItem('icfsl_ind_sync',JSON.stringify(saved));renderSavedConfigs();
+}
+function renderSavedConfigs(){
+  var keys=Object.keys(JSON.parse(localStorage.getItem('icfsl_ind_sync')||'{}'));
+  var wrap=document.getElementById('savedConfigsWrap');
+  if(!keys.length){wrap.classList.add('hidden');return;}
+  wrap.classList.remove('hidden');
+  document.getElementById('cfgList').innerHTML=keys.map(function(k){
+    return '<div class="cfg-item"><button class="load-btn" onclick="loadConfig(\''+esc(k)+'\')">'+k+'</button><button class="del-btn" onclick="deleteConfig(\''+esc(k)+'\')">x</button></div>';
+  }).join('');
+}
+function exportConfig(){
+  var a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([JSON.stringify(getConfigObj(),null,2)],{type:'application/json'}));
+  a.download='ind_sync_cfg_'+new Date().toISOString().slice(0,10)+'.json';a.click();
+}
+function importConfig(){document.getElementById('importFile').click();}
+function loadImportedConfig(e){
+  var file=e.target.files[0];if(!file)return;
+  var r=new FileReader();
+  r.onload=function(ev){
+    try{
+      var cfg=JSON.parse(ev.target.result);
+      mappings=[];periods=[];orgUnits=[];
+      (cfg.mappings||[]).forEach(function(m){mappings.push(m);});
+      (cfg.periods||[]).forEach(function(p){periods.push(p);});
+      (cfg.orgUnits||[]).forEach(function(o){orgUnits.push(o);});
+      renderMappings();renderPeriodChips();renderOUChips();
+      log('Config imported.','ok');
+    }catch(err){log('Import failed: '+err.message,'err');}
+  };
+  r.readAsText(file);e.target.value='';
+}
+
+buildPeriodInput();
+initApp();
+</script>
+</body>
+</html>

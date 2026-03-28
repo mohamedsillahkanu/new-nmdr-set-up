@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Output Indicators Trend Analysis Report</title>
+    <style>
+        :root {
+            --blue:  #2c6793;
+            --white: #ffffff;
+        }
+
+        body {
+            font-family: 'Arial', 'Helvetica', sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: var(--blue);
+            line-height: 1.6;
+            color: var(--blue);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: var(--white);
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(44,103,147,0.25);
+            border: 1px solid rgba(44,103,147,0.2);
+        }
+
+        h1 {
+            color: var(--blue);
+            text-align: center;
+            border-bottom: 3px solid var(--blue);
+            padding-bottom: 20px;
+            margin-bottom: 40px;
+            font-size: 2.2em;
+            font-weight: 600;
+        }
+
+        h2 {
+            color: var(--white);
+            background-color: var(--blue);
+            margin: 40px -30px 30px -30px;
+            padding: 20px 30px;
+            font-size: 1.6em;
+            font-weight: 500;
+            border-left: 5px solid rgba(255,255,255,0.4);
+            scroll-margin-top: 80px;
+        }
+
+        h3 {
+            color: var(--blue);
+            font-size: 1.3em;
+            font-weight: 600;
+            margin-top: 30px;
+            margin-bottom: 15px;
+            border-bottom: 2px solid rgba(44,103,147,0.25);
+            padding-bottom: 8px;
+            scroll-margin-top: 80px;
+        }
+
+        /* Navigation */
+        .section-nav {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: var(--white);
+            border: 2px solid var(--blue);
+            border-radius: 8px;
+            max-width: 350px;
+            min-width: 60px;
+            z-index: 1000;
+            box-shadow: 0 4px 20px rgba(44,103,147,0.25);
+            transition: all 0.3s ease;
+            overflow: hidden;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .nav-header {
+            background: var(--blue);
+            color: var(--white);
+            padding: 12px 15px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: 600;
+            font-size: 14px;
+            user-select: none;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .nav-toggle {
+            font-size: 18px;
+            transition: transform 0.3s ease;
+            line-height: 1;
+        }
+
+        .nav-toggle.expanded { transform: rotate(180deg); }
+
+        .nav-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+            background: var(--white);
+        }
+
+        .nav-content.expanded {
+            max-height: 1000px;
+            padding: 10px 0;
+        }
+
+        .nav-main-item {
+            display: block;
+            color: var(--blue);
+            text-decoration: none;
+            padding: 8px 15px;
+            font-size: 13px;
+            font-weight: 600;
+            border-bottom: 1px solid rgba(44,103,147,0.1);
+            transition: all 0.2s ease;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .nav-main-item:hover {
+            background-color: rgba(44,103,147,0.08);
+            color: var(--blue);
+        }
+
+        .nav-main-item.active {
+            background-color: rgba(44,103,147,0.15);
+            color: var(--blue);
+            border-left: 4px solid var(--blue);
+        }
+
+        .nav-sub-item {
+            display: block;
+            color: rgba(44,103,147,0.75);
+            text-decoration: none;
+            padding: 6px 20px;
+            font-size: 11px;
+            transition: all 0.2s ease;
+            border-bottom: 1px solid rgba(44,103,147,0.08);
+            line-height: 1.3;
+        }
+
+        .nav-sub-item:hover {
+            background-color: rgba(44,103,147,0.1);
+            color: var(--blue);
+            padding-left: 25px;
+        }
+
+        .nav-sub-item.active {
+            background-color: rgba(44,103,147,0.15);
+            color: var(--blue);
+            font-weight: 600;
+            border-left: 3px solid var(--blue);
+        }
+
+        .scroll-progress {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 0%;
+            height: 3px;
+            background: var(--blue);
+            z-index: 1001;
+            transition: width 0.3s ease;
+        }
+
+        /* Charts */
+        .chart-container {
+            background-color: rgba(44,103,147,0.03);
+            border: 1px solid rgba(44,103,147,0.18);
+            border-radius: 6px;
+            margin: 25px 0;
+            padding: 20px;
+        }
+
+        .chart-title {
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: var(--blue);
+            font-size: 1.1em;
+            background-color: rgba(44,103,147,0.08);
+            padding: 12px;
+            border-radius: 4px;
+            border-left: 4px solid var(--blue);
+        }
+
+        .chart-svg {
+            width: 100%;
+            height: 400px;
+            border: 1px solid rgba(44,103,147,0.2);
+            border-radius: 4px;
+            background: var(--white);
+        }
+
+        .scaling-notice {
+            background-color: rgba(44,103,147,0.07);
+            border: 2px solid var(--blue);
+            border-radius: 6px;
+            padding: 20px;
+            margin: 20px 0;
+            color: var(--blue);
+            font-weight: 500;
+        }
+
+        .stats-box {
+            background-color: rgba(44,103,147,0.07);
+            border: 2px solid var(--blue);
+            border-radius: 6px;
+            padding: 20px;
+            margin-top: 50px;
+            text-align: center;
+            color: var(--blue);
+        }
+
+        /* Footer */
+        .footer {
+            background: var(--blue);
+            color: rgba(255,255,255,0.75);
+            text-align: center;
+            padding: 16px 20px;
+            font-size: 0.88em;
+            letter-spacing: 0.4px;
+            border-top: 2px solid rgba(255,255,255,0.2);
+            margin-top: 30px;
+            border-radius: 0 0 8px 8px;
+        }
+
+        .footer strong { color: var(--white); }
+
+        @media (max-width: 768px) {
+            .section-nav { top: 10px; right: 10px; max-width: 280px; }
+            .container { padding: 15px; margin: 0 10px; }
+        }
+    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+</head>
+<body>
+    <div class="scroll-progress" id="scrollProgress"></div>
+
+    <div class="section-nav" id="sectionNav">
+        <div class="nav-header" onclick="toggleNav()">
+            <span class="nav-title">Navigation</span>
+            <span class="nav-toggle" id="navToggle">▼</span>
+        </div>
+        <div class="nav-content" id="navContent">
+            <a href="#overview" class="nav-main-item" onclick="scrollToSection('overview')">Overview</a>
+            <a href="#indicator-1"  class="nav-sub-item" onclick="scrollToSection('indicator-1')">1. Parasitological Test - All</a>
+            <a href="#indicator-2"  class="nav-sub-item" onclick="scrollToSection('indicator-2')">2. First-line Treatment</a>
+            <a href="#indicator-3"  class="nav-sub-item" onclick="scrollToSection('indicator-3')">3. Facility Reports</a>
+            <a href="#indicator-4"  class="nav-sub-item" onclick="scrollToSection('indicator-4')">4. Test - Public Facilities</a>
+            <a href="#indicator-5"  class="nav-sub-item" onclick="scrollToSection('indicator-5')">5. Test - Community</a>
+            <a href="#indicator-6"  class="nav-sub-item" onclick="scrollToSection('indicator-6')">6. Test - Private Sector</a>
+            <a href="#indicator-7"  class="nav-sub-item" onclick="scrollToSection('indicator-7')">7. Treatment - Public All</a>
+            <a href="#indicator-8"  class="nav-sub-item" onclick="scrollToSection('indicator-8')">8. Treatment - Public Confirmed</a>
+            <a href="#indicator-9"  class="nav-sub-item" onclick="scrollToSection('indicator-9')">9. Treatment - Community</a>
+            <a href="#indicator-10" class="nav-sub-item" onclick="scrollToSection('indicator-10')">10. Treatment - Private</a>
+            <a href="#indicator-11" class="nav-sub-item" onclick="scrollToSection('indicator-11')">11. Prompt Care U5</a>
+            <a href="#indicator-12" class="nav-sub-item" onclick="scrollToSection('indicator-12')">12. IPTp Coverage</a>
+            <a href="#indicator-13" class="nav-sub-item" onclick="scrollToSection('indicator-13')">13. IRS Population</a>
+            <a href="#indicator-14" class="nav-sub-item" onclick="scrollToSection('indicator-14')">14. IRS Children U5</a>
+            <a href="#indicator-15" class="nav-sub-item" onclick="scrollToSection('indicator-15')">15. IRS Pregnant Women</a>
+        </div>
+    </div>
+
+    <div class="container">
+        <h1>Output Indicators Trend Analysis Report (2021–2024)</h1>
+
+        <div id="overview" class="section">
+            <h2>Overview</h2>
+            <div class="scaling-notice">
+                This retrospective analysis examines Sierra Leone's malaria program performance from 2021 to 2024,
+                assessing the extent to which planned targets were met across 15 output indicators spanning
+                case testing, treatment, facility reporting, community care, and vector control.
+                The analysis is intended to identify gaps, highlight trends, and provide an evidence base
+                for programmatic decision-making and future planning by the National Malaria Control Programme (NMCP).
+            </div>
+        </div>
+
+        <div id="chartsContainer"></div>
+
+        <div class="footer">
+            Designed &amp; Developed by &nbsp;
+            <strong>Informatics Consultancy Firm (ICF-SL)</strong>
+            &nbsp;|&nbsp; &copy; <span id="footerYear"></span> All Rights Reserved
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('footerYear').textContent = new Date().getFullYear();
+
+        const BLUE   = '#2c6793';
+        const ORANGE = '#e07b1a';
+        const WHITE  = '#ffffff';
+
+        const outputIndicators = [
+            { name: "Proportion of patients with suspected malaria who received a parasitological test", shortName: "Parasitological Test - All", data: [{year:2021,target:100,achieved:97.4},{year:2022,target:100,achieved:97.8},{year:2023,target:100,achieved:97.8},{year:2024,target:100,achieved:84.8}], yAxisLabel: "Percentage (%)", isPercentage: true },
+            { name: "Proportion of patients with confirmed malaria who received first-line antimalarial treatment", shortName: "First-line Treatment", data: [{year:2021,target:100,achieved:91.8},{year:2022,target:100,achieved:90.2},{year:2023,target:100,achieved:91.3},{year:2024,target:100,achieved:89.8}], yAxisLabel: "Percentage (%)", isPercentage: true },
+            { name: "Proportion of expected health facility reports received", shortName: "Facility Reports", data: [{year:2021,target:100,achieved:82.9},{year:2022,target:100,achieved:83.9},{year:2023,target:100,achieved:70.9},{year:2024,target:100,achieved:82.2}], yAxisLabel: "Percentage (%)", isPercentage: true },
+            { name: "Proportion of suspected malaria cases that receive a parasitological test at public sector health facilities", shortName: "Test - Public Facilities", data: [{year:2021,target:100,achieved:98.5},{year:2022,target:100,achieved:95.9},{year:2023,target:100,achieved:93.0},{year:2024,target:100,achieved:89.9}], yAxisLabel: "Percentage (%)", isPercentage: true },
+            { name: "Proportion of suspected malaria cases that receive a parasitological test in the community", shortName: "Test - Community", data: [{year:2021,target:100,achieved:71.6},{year:2022,target:100,achieved:44.3},{year:2023,target:100,achieved:64.9},{year:2024,target:100,achieved:58.3}], yAxisLabel: "Percentage (%)", isPercentage: true },
+            { name: "Proportion of suspected malaria cases that receive a parasitological test in the private sector", shortName: "Test - Private Sector", data: [{year:2021,target:100,achieved:100},{year:2022,target:100,achieved:98.9},{year:2023,target:100,achieved:100},{year:2024,target:100,achieved:95.0}], yAxisLabel: "Percentage (%)", isPercentage: true },
+            { name: "Proportion of malaria cases (presumed and confirmed) that received first line antimalarial treatment at public sector health facilities", shortName: "Treatment - Public All", data: [{year:2021,target:100,achieved:92.4},{year:2022,target:100,achieved:90.6},{year:2023,target:100,achieved:92.4},{year:2024,target:100,achieved:91.2}], yAxisLabel: "Percentage (%)", isPercentage: true },
+            { name: "Proportion of confirmed malaria cases that received first-line antimalarial treatment at public sector health facilities", shortName: "Treatment - Public Confirmed", data: [{year:2021,target:100,achieved:92.3},{year:2022,target:100,achieved:90.2},{year:2023,target:100,achieved:91.8},{year:2024,target:100,achieved:90.7}], yAxisLabel: "Percentage (%)", isPercentage: true },
+            { name: "Proportion of confirmed malaria cases that received first-line antimalarial treatment in the community", shortName: "Treatment - Community", data: [{year:2021,target:100,achieved:78.7},{year:2022,target:100,achieved:70.6},{year:2023,target:100,achieved:87.3},{year:2024,target:100,achieved:84.2}], yAxisLabel: "Percentage (%)", isPercentage: true },
+            { name: "Proportion of confirmed malaria cases that received first-line antimalarial treatment at private sector facilities", shortName: "Treatment - Private", data: [{year:2021,target:100,achieved:92.3},{year:2022,target:100,achieved:92.7},{year:2023,target:100,achieved:94.9},{year:2024,target:100,achieved:89.1}], yAxisLabel: "Percentage (%)", isPercentage: true },
+            { name: "Proportion of children under 5 years with fever for whom the caretakers sought prompt care within 24 hours at the community", shortName: "Prompt Care U5", data: [{year:2021,target:81,achieved:74.2},{year:2022,target:83,achieved:74.2},{year:2023,target:85,achieved:65.9},{year:2024,target:87,achieved:68.4}], yAxisLabel: "Percentage (%)", isPercentage: true },
+            { name: "Proportion of pregnant women who received three or more doses of IPTp for malaria in the community", shortName: "IPTp Coverage", data: [{year:2021,target:12,achieved:8.2},{year:2022,target:13,achieved:4.3},{year:2023,target:14,achieved:8.8},{year:2024,target:15,achieved:6.1}], yAxisLabel: "Percentage (%)", isPercentage: true },
+            { name: "Proportion of population at risk protected by IRS in the previous 12 months", shortName: "IRS Population", data: [{year:2021,target:85,achieved:57.6},{year:2022,target:85,achieved:54.5},{year:2023,target:85,achieved:61.2},{year:2024,target:85,achieved:71.2}], yAxisLabel: "Percentage (%)", isPercentage: true },
+            { name: "Proportion of children under five years protected by IRS", shortName: "IRS Children U5", data: [{year:2021,target:85,achieved:55.9},{year:2022,target:85,achieved:48.4},{year:2023,target:85,achieved:53.7},{year:2024,target:85,achieved:65.2}], yAxisLabel: "Percentage (%)", isPercentage: true },
+            { name: "Proportion of pregnant women protected by IRS", shortName: "IRS Pregnant Women", data: [{year:2021,target:85,achieved:50.6},{year:2022,target:85,achieved:36.3},{year:2023,target:85,achieved:53.7},{year:2024,target:85,achieved:91.9}], yAxisLabel: "Percentage (%)", isPercentage: true }
+        ];
+
+        function createChart(indicatorData, chartId) {
+            const margin = { top: 90, right: 160, bottom: 75, left: 80 };
+            const width  = 820 - margin.left - margin.right;
+            const height = 420 - margin.top  - margin.bottom;
+
+            d3.select(`#${chartId}`).selectAll("*").remove();
+
+            const svg = d3.select(`#${chartId}`)
+                .attr("viewBox", `0 0 ${width + margin.left + margin.right} ${height + margin.top + margin.bottom}`)
+                .append("g")
+                .attr("transform", `translate(${margin.left},${margin.top})`);
+
+            // Chart background
+            svg.append("rect").attr("x",-10).attr("y",-10)
+                .attr("width", width+20).attr("height", height+20)
+                .attr("fill","#ffffff").attr("rx",6);
+
+            // Subtitle
+            svg.append("text").attr("x", width/2).attr("y", -60).attr("text-anchor","middle")
+                .style("font-size","13px").style("font-weight","700").style("fill", BLUE)
+                .text(indicatorData.shortName || indicatorData.name);
+            svg.append("text").attr("x", width/2).attr("y", -40).attr("text-anchor","middle")
+                .style("font-size","11px").style("fill","#6a8eaa")
+                .text("Target vs Achieved  |  2021–2024");
+
+            const data      = indicatorData.data;
+            const allValues = data.flatMap(d => [d.target, d.achieved]).filter(v => v != null);
+            const yMin      = 0;
+            const yMax      = indicatorData.isPercentage ? 100 : Math.ceil(d3.max(allValues) / 10) * 10;
+
+            const xScale = d3.scaleBand().domain(data.map(d => d.year)).range([0, width]).padding(0.35);
+            const yScale = d3.scaleLinear().domain([yMin, yMax]).range([height, 0]);
+            const cx     = d => xScale(d.year) + xScale.bandwidth() / 2;
+
+            // Grid lines
+            const ticks = yScale.ticks(5);
+            ticks.forEach(t => {
+                svg.append("line")
+                    .attr("x1",0).attr("y1",yScale(t))
+                    .attr("x2",width).attr("y2",yScale(t))
+                    .attr("stroke","rgba(44,103,147,0.13)").attr("stroke-width",1)
+                    .attr("stroke-dasharray","4,3");
+            });
+
+            // Axes
+            const yAxis = d3.axisLeft(yScale).ticks(5);
+            if (indicatorData.isPercentage) yAxis.tickFormat(d => d + "%");
+            const xAxisG = svg.append("g").attr("transform",`translate(0,${height})`).call(d3.axisBottom(xScale));
+            xAxisG.selectAll("text").style("font-size","13px").style("font-weight","700").style("fill", BLUE);
+            xAxisG.selectAll(".domain,.tick line").style("stroke", BLUE).style("stroke-width","1.5");
+            const yAxisG = svg.append("g").call(yAxis);
+            yAxisG.selectAll("text").style("font-size","12px").style("fill","#4a7a9b");
+            yAxisG.selectAll(".domain,.tick line").style("stroke","rgba(44,103,147,0.3)");
+
+            // Axis labels
+            svg.append("text").attr("transform","rotate(-90)").attr("y",-margin.left+15)
+                .attr("x",-(height/2)).attr("dy","1em").style("text-anchor","middle")
+                .style("font-weight","700").style("font-size","12px").style("fill", BLUE)
+                .text(indicatorData.yAxisLabel);
+            svg.append("text").attr("transform",`translate(${width/2},${height+52})`)
+                .style("text-anchor","middle").style("font-weight","700")
+                .style("font-size","12px").style("fill", BLUE).text("Year");
+
+            const validData = data.filter(d => d.achieved != null);
+
+            if (validData.length > 0) {
+                // Area fill between target and achieved
+                const areaGen = d3.area()
+                    .x(d => cx(d))
+                    .y0(d => yScale(d.target))
+                    .y1(d => yScale(d.achieved));
+                svg.append("path").datum(validData)
+                    .attr("fill","rgba(224,123,26,0.12)")
+                    .attr("d", areaGen);
+
+                // Target line — bold solid blue
+                svg.append("path").datum(validData).attr("fill","none")
+                    .attr("stroke", BLUE).attr("stroke-width", 3.5)
+                    .attr("stroke-linejoin","round").attr("stroke-linecap","round")
+                    .attr("d", d3.line().x(d=>cx(d)).y(d=>yScale(d.target)));
+
+                // Achieved line — bold orange
+                svg.append("path").datum(validData).attr("fill","none")
+                    .attr("stroke", ORANGE).attr("stroke-width", 3.5)
+                    .attr("stroke-linejoin","round").attr("stroke-linecap","round")
+                    .attr("d", d3.line().x(d=>cx(d)).y(d=>yScale(d.achieved)));
+            }
+
+            // Points and labels
+            data.forEach(d => {
+                const x       = cx(d);
+                const yT      = yScale(d.target);
+
+                // Target point
+                svg.append("circle").attr("cx",x).attr("cy",yT).attr("r",7)
+                    .attr("fill", WHITE).attr("stroke", BLUE).attr("stroke-width",2.5);
+                svg.append("circle").attr("cx",x).attr("cy",yT).attr("r",3.5).attr("fill", BLUE);
+
+                if (d.achieved != null) {
+                    const yA      = yScale(d.achieved);
+                    const hiIsT   = d.target >= d.achieved;
+                    const variance = (d.achieved - d.target) / d.target * 100;
+
+                    // Achieved point
+                    svg.append("circle").attr("cx",x).attr("cy",yA).attr("r",7)
+                        .attr("fill", WHITE).attr("stroke", ORANGE).attr("stroke-width",2.5);
+                    svg.append("circle").attr("cx",x).attr("cy",yA).attr("r",3.5).attr("fill", ORANGE);
+
+                    // Variance connector
+                    svg.append("line").attr("x1",x).attr("y1",yT).attr("x2",x).attr("y2",yA)
+                        .attr("stroke","rgba(100,100,100,0.3)").attr("stroke-width",1.5).attr("stroke-dasharray","3,2");
+
+                    // Variance badge
+                    const varStr  = `${variance>=0?'+':''}${variance.toFixed(1)}%`;
+                    const varCol  = variance >= 0 ? '#2a7a3b' : '#c0392b';
+                    const varX    = x + 22;
+                    const varY    = (yT + yA) / 2;
+                    const vt = svg.append("text").attr("x",varX).attr("y",varY).attr("dy","0.35em")
+                        .style("font-size","10px").style("font-weight","800").text(varStr);
+                    const vb = vt.node().getBBox();
+                    svg.append("rect").attr("x",vb.x-3).attr("y",vb.y-2).attr("width",vb.width+6)
+                        .attr("height",vb.height+4).attr("fill", varCol).attr("rx",3);
+                    vt.style("fill", WHITE).raise();
+
+                    // Target label
+                    const tLabel = indicatorData.isPercentage ? `${d.target%1===0?d.target.toFixed(0):d.target.toFixed(1)}%` : String(d.target);
+                    const tY     = hiIsT ? yT - 18 : yT + 22;
+                    const tt = svg.append("text").attr("x",x).attr("y",tY).attr("text-anchor","middle")
+                        .style("font-size","11px").style("font-weight","700").text(tLabel);
+                    const tb = tt.node().getBBox();
+                    svg.append("rect").attr("x",tb.x-4).attr("y",tb.y-2).attr("width",tb.width+8)
+                        .attr("height",tb.height+4).attr("fill", BLUE).attr("rx",3);
+                    tt.style("fill", WHITE).raise();
+
+                    // Achieved label
+                    const aLabel = indicatorData.isPercentage ? `${d.achieved%1===0?d.achieved.toFixed(0):d.achieved.toFixed(1)}%` : String(d.achieved);
+                    const aY     = hiIsT ? yA + 22 : yA - 18;
+                    const at = svg.append("text").attr("x",x).attr("y",aY).attr("text-anchor","middle")
+                        .style("font-size","11px").style("font-weight","700").text(aLabel);
+                    const ab = at.node().getBBox();
+                    svg.append("rect").attr("x",ab.x-4).attr("y",ab.y-2).attr("width",ab.width+8)
+                        .attr("height",ab.height+4).attr("fill", ORANGE).attr("rx",3);
+                    at.style("fill", WHITE).raise();
+
+                } else {
+                    const tLabel = indicatorData.isPercentage ? `${d.target%1===0?d.target.toFixed(0):d.target.toFixed(1)}%` : String(d.target);
+                    const tt = svg.append("text").attr("x",x).attr("y",yT-18).attr("text-anchor","middle")
+                        .style("font-size","11px").style("font-weight","700").text(tLabel);
+                    const tb = tt.node().getBBox();
+                    svg.append("rect").attr("x",tb.x-4).attr("y",tb.y-2).attr("width",tb.width+8)
+                        .attr("height",tb.height+4).attr("fill", BLUE).attr("rx",3);
+                    tt.style("fill", WHITE).raise();
+                    svg.append("text").attr("x",x).attr("y",yT+22).attr("text-anchor","middle")
+                        .style("font-size","10px").style("font-style","italic")
+                        .style("fill","rgba(44,103,147,0.45)").text("No Data");
+                }
+            });
+
+            // Legend
+            const lg = svg.append("g").attr("transform",`translate(${width+18},30)`);
+            // Target
+            lg.append("line").attr("x1",0).attr("y1",0).attr("x2",22).attr("y2",0)
+                .attr("stroke", BLUE).attr("stroke-width",3).attr("stroke-linecap","round");
+            lg.append("circle").attr("cx",11).attr("cy",0).attr("r",5)
+                .attr("fill", WHITE).attr("stroke", BLUE).attr("stroke-width",2);
+            lg.append("circle").attr("cx",11).attr("cy",0).attr("r",2.5).attr("fill", BLUE);
+            lg.append("text").attr("x",28).attr("y",0).attr("dy","0.35em")
+                .style("font-size","12px").style("font-weight","700").style("fill", BLUE).text("Target");
+            // Achieved
+            lg.append("line").attr("x1",0).attr("y1",22).attr("x2",22).attr("y2",22)
+                .attr("stroke", ORANGE).attr("stroke-width",3).attr("stroke-linecap","round");
+            lg.append("circle").attr("cx",11).attr("cy",22).attr("r",5)
+                .attr("fill", WHITE).attr("stroke", ORANGE).attr("stroke-width",2);
+            lg.append("circle").attr("cx",11).attr("cy",22).attr("r",2.5).attr("fill", ORANGE);
+            lg.append("text").attr("x",28).attr("y",22).attr("dy","0.35em")
+                .style("font-size","12px").style("font-weight","700").style("fill", ORANGE).text("Achieved");
+            // Variance key
+            lg.append("rect").attr("x",0).attr("y",44).attr("width",22).attr("height",12)
+                .attr("fill","rgba(224,123,26,0.12)").attr("stroke","rgba(224,123,26,0.4)").attr("rx",2);
+            lg.append("text").attr("x",28).attr("y",50).attr("dy","0.35em")
+                .style("font-size","11px").style("fill","#6a8eaa").text("Gap area");
+        }
+
+        let navExpanded = true;
+        function toggleNav() {
+            navExpanded = !navExpanded;
+            document.getElementById('navContent').classList.toggle('expanded', navExpanded);
+            document.getElementById('navToggle').classList.toggle('expanded', navExpanded);
+        }
+        function scrollToSection(id) {
+            const el = document.getElementById(id);
+            if (el) { el.scrollIntoView({behavior:'smooth',block:'start'}); updateActiveNavItem(id); }
+        }
+        function updateActiveNavItem(id) {
+            document.querySelectorAll('.nav-main-item,.nav-sub-item').forEach(i => i.classList.remove('active'));
+            const a = document.querySelector(`a[href="#${id}"]`);
+            if (a) a.classList.add('active');
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const container = document.getElementById('chartsContainer');
+            outputIndicators.forEach((ind, i) => {
+                const div = document.createElement('div');
+                div.id = `indicator-${i+1}`;
+                div.className = 'chart-container';
+                div.innerHTML = `<div class="chart-title">${i+1}. ${ind.name}</div><svg class="chart-svg" id="chart-${i+1}"></svg>`;
+                container.appendChild(div);
+                createChart(ind, `chart-${i+1}`);
+            });
+
+            window.addEventListener('scroll', () => {
+                const pct = (window.pageYOffset / (document.body.scrollHeight - window.innerHeight)) * 100;
+                document.getElementById('scrollProgress').style.width = pct + '%';
+            });
+        });
+    </script>
+</body>
+</html>

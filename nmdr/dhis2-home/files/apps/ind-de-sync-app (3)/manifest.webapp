@@ -1,0 +1,16 @@
+{
+  "name": "Indicator DE Sync",
+  "description": "Sync computed indicator values into target data elements. Built by ICF-SL for NMCP.",
+  "version": "1.0.0",
+  "launch_path": "index.html",
+  "appType": "APP",
+  "core_app": false,
+  "icons": { "48": "icon.png" },
+  "developer": {
+    "name": "ICF-SL",
+    "company": "Informatics Consultancy Firm Sierra Leone"
+  },
+  "activities": {
+    "dhis": { "href": "*" }
+  }
+}

@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welcome to National Malaria Data Repository</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --blue:     #2c6793;
+            --blue-dk:  #1f4a6a;
+            --white:    #ffffff;
+            --bg:       #f0f5f9;
+            --border:   #d0dde8;
+            --muted:    #6c7a89;
+            --chip:     #e8f0f7;
+        }
+
+        body {
+            font-family: 'Roboto', 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, var(--blue) 0%, var(--blue-dk) 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 16px 24px 32px;
+            gap: 14px;
+        }
+
+        /* ── HERO ── */
+        .hero {
+            background: var(--white);
+            border-radius: 12px;
+            padding: 22px 32px 18px;
+            text-align: center;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.2);
+            
+            width: 100%;
+            position: relative;
+            overflow: hidden;
+            animation: slideUp 0.5s ease;
+        }
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 4px;
+            background: var(--blue);
+        }
+        .hero::after {
+            content: '';
+            position: absolute;
+            right: -40px; bottom: -40px;
+            width: 160px; height: 160px;
+            border: 2px solid rgba(44,103,147,0.06);
+            border-radius: 50%;
+        }
+
+        .hero-tag {
+            display: inline-block;
+            background: var(--chip);
+            color: var(--blue);
+            font-size: 9px;
+            font-weight: 700;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            padding: 3px 10px;
+            border-radius: 20px;
+            border: 1px solid rgba(44,103,147,0.2);
+            margin-bottom: 8px;
+        }
+
+        .hero h1 {
+            font-size: 22px;
+            color: var(--blue);
+            font-weight: 700;
+            line-height: 1.2;
+            margin-bottom: 6px;
+            letter-spacing: 0.2px;
+        }
+
+        .hero p {
+            font-size: 12px;
+            color: var(--muted);
+            line-height: 1.7;
+            
+            margin: 0 auto;
+            font-weight: 400;
+        }
+
+        .cards-section {
+            width: 100%;
+            
+            animation: slideUp 0.6s ease 0.1s both;
+        }
+
+        .section-label {
+            text-align: center;
+            color: rgba(255,255,255,0.7);
+            font-size: 9px;
+            font-weight: 600;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            margin-bottom: 10px;
+        }
+
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+        }
+
+        /* ── CARD ── */
+        .card {
+            background: var(--white);
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            transition: transform 0.2s, box-shadow 0.2s;
+            animation: slideUp 0.5s ease both;
+        }
+        .card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+        }
+
+        .card-stripe { height: 3px; background: var(--blue); }
+
+        .card-body { padding: 14px 16px 12px; }
+
+        .card-icon-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .card-icon {
+            width: 32px; height: 32px;
+            background: var(--chip);
+            border-radius: 6px;
+            display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0;
+        }
+        .card-icon svg {
+            width: 16px; height: 16px;
+            fill: none;
+            stroke: var(--blue);
+            stroke-width: 2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        .card-num {
+            font-size: 9px;
+            font-weight: 600;
+            color: var(--blue);
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            opacity: 0.6;
+        }
+
+        .card-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: #1a2e3d;
+            line-height: 1.3;
+        }
+
+        .card-divider {
+            height: 1px;
+            background: var(--border);
+            margin-bottom: 10px;
+        }
+
+        .card-list {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .card-list li {
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+            font-size: 11.5px;
+            color: var(--muted);
+            line-height: 1.5;
+        }
+
+        .card-list li::before {
+            content: '';
+            width: 5px; height: 5px;
+            background: var(--blue);
+            border-radius: 50%;
+            margin-top: 5px;
+            flex-shrink: 0;
+            opacity: 0.65;
+        }
+
+        /* ── FOOTER ── */
+        footer {
+            width: 100%;
+            
+            text-align: center;
+            padding: 10px 20px;
+            color: rgba(255,255,255,0.5);
+            font-size: 11px;
+            letter-spacing: 0.4px;
+            border-top: 1px solid rgba(255,255,255,0.1);
+        }
+        footer a {
+            color: rgba(255,255,255,0.8);
+            font-weight: 600;
+            text-decoration: none;
+            border-bottom: 1px solid rgba(255,255,255,0.3);
+            padding-bottom: 1px;
+            transition: color 0.2s;
+        }
+        footer a:hover { color: var(--white); }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        @media(max-width: 620px) {
+            .cards-grid { grid-template-columns: 1fr; }
+            .hero { padding: 36px 24px 30px; }
+            .hero h1 { font-size: 26px; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- HERO -->
+    <div class="hero">
+        <div class="hero-tag">Sierra Leone NMCP</div>
+        <h1>National Malaria Data Repository</h1>
+        <p>A centralized, integrated platform for malaria surveillance, programme monitoring, and data-driven decision making across Sierra Leone.</p>
+    </div>
+
+    <!-- CARDS -->
+    <div class="cards-section">
+        <p class="section-label">About the Repository</p>
+        <div class="cards-grid">
+
+            <!-- 1. Introduction -->
+            <div class="card" style="animation-delay:0.1s">
+                <div class="card-stripe"></div>
+                <div class="card-body">
+                    <div class="card-icon-row">
+                        <div class="card-icon">
+                            <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+                        </div>
+                        <div>
+                            <div class="card-num">01 &mdash; Introduction</div>
+                            <div class="card-title">What is the NMDR?</div>
+                        </div>
+                    </div>
+                    <div class="card-divider"></div>
+                    <ul class="card-list">
+                        <li>A national digital infrastructure for storing, managing and accessing malaria programme data</li>
+                        <li>Hosted on DHIS2 and integrated with HMIS, LMIS and surveillance systems</li>
+                        <li>Developed through collaboration between NMCP, ICF-SL, WHO, AHADI and CHAI</li>
+                        <li>Designed to support the full subnational tailoring (SNT) pipeline</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- 2. Purpose -->
+            <div class="card" style="animation-delay:0.18s">
+                <div class="card-stripe"></div>
+                <div class="card-body">
+                    <div class="card-icon-row">
+                        <div class="card-icon">
+                            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
+                        </div>
+                        <div>
+                            <div class="card-num">02 &mdash; Purpose</div>
+                            <div class="card-title">Why the NMDR Exists</div>
+                        </div>
+                    </div>
+                    <div class="card-divider"></div>
+                    <ul class="card-list">
+                        <li>Consolidate fragmented malaria data from multiple sources into one authoritative repository</li>
+                        <li>Eliminate data silos between HMIS, LMIS, surveys and surveillance reporting</li>
+                        <li>Provide a single source of truth for malaria indicators used in planning and reviews</li>
+                        <li>Strengthen national data governance and reporting standards</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- 3. Key Focus Areas -->
+            <div class="card" style="animation-delay:0.26s">
+                <div class="card-stripe"></div>
+                <div class="card-body">
+                    <div class="card-icon-row">
+                        <div class="card-icon">
+                            <svg viewBox="0 0 24 24"><path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+                        </div>
+                        <div>
+                            <div class="card-num">03 &mdash; Focus Areas</div>
+                            <div class="card-title">Key Programme Areas</div>
+                        </div>
+                    </div>
+                    <div class="card-divider"></div>
+                    <ul class="card-list">
+                        <li>Case management — testing, treatment and reporting across public, community and private sectors</li>
+                        <li>Vector control — IRS coverage, ITN distribution and utilisation tracking</li>
+                        <li>Malaria in pregnancy — IPTp, ANC attendance and maternal outcomes</li>
+                        <li>Epidemiology — incidence, mortality, TPR and parasite prevalence by district</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- 4. Expected Benefits -->
+            <div class="card" style="animation-delay:0.34s">
+                <div class="card-stripe"></div>
+                <div class="card-body">
+                    <div class="card-icon-row">
+                        <div class="card-icon">
+                            <svg viewBox="0 0 24 24"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                        </div>
+                        <div>
+                            <div class="card-num">04 &mdash; Benefits</div>
+                            <div class="card-title">Expected Benefits</div>
+                        </div>
+                    </div>
+                    <div class="card-divider"></div>
+                    <ul class="card-list">
+                        <li>Faster, evidence-based programme planning through readily accessible historical data</li>
+                        <li>Improved data quality through built-in validation, completeness checks and DQA tools</li>
+                        <li>Enhanced transparency and accountability in malaria indicator reporting</li>
+                        <li>Strengthened capacity for subnational tailoring and targeted intervention delivery</li>
+                    </ul>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- FOOTER -->
+    <footer>
+        Developed &amp; Maintained by &nbsp;
+        <a href="https://icf-sl.com" target="_blank">Informatics Consultancy Firm Sierra Leone (ICF-SL)</a>
+        &nbsp;&mdash;&nbsp; &copy; <span id="yr"></span>
+    </footer>
+
+    <script>
+        document.getElementById('yr').textContent = new Date().getFullYear();
+    </script>
+</body>
+</html>

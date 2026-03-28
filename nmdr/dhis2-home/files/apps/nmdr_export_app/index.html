@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DHIS2 Dataset Export — ICF-SL</title>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{--navy:#004080;--navy-lt:#0056b3;--gold:#ffc107;--gold-dk:#e0a800;--white:#fff;--bg:#f0f4f8;--border:#cdd8e3;--muted:#6c7a89;--green:#28a745;--red:#dc3545;--card:#fff}
+body{font-family:'Oswald',Arial,sans-serif;background:var(--bg);color:#111;font-weight:500;min-height:100vh}
+
+/* LOGIN */
+.login-screen{display:flex;justify-content:center;align-items:center;min-height:100vh;padding:20px;background:linear-gradient(135deg,var(--navy) 0%,var(--navy-lt) 100%)}
+.login-card{background:var(--white);border-radius:12px;padding:36px;max-width:460px;width:100%;box-shadow:0 10px 40px rgba(0,0,0,.25);border:4px double var(--navy)}
+.logo-wrap{display:flex;justify-content:center;margin-bottom:20px}
+.logo-box{background:#f8f9fa;border-radius:8px;padding:10px;border:2px solid var(--navy)}
+.logo-box img{width:90px;height:auto;border-radius:6px}
+.login-hdr{text-align:center;margin-bottom:24px}
+.login-hdr h1{color:var(--navy);font-size:20px;font-weight:700;letter-spacing:1px;margin-bottom:5px}
+.login-hdr p{color:var(--muted);font-size:12px;font-weight:400}
+.fg{margin-bottom:14px}
+.fl{display:block;color:var(--navy);font-size:11px;font-weight:700;margin-bottom:5px;text-transform:uppercase;letter-spacing:.5px}
+.fi,.fs{width:100%;padding:10px 13px;border:2px solid var(--navy);border-radius:6px;font-size:13px;font-family:'Oswald',Arial,sans-serif;font-weight:500;color:#000;background:var(--white);transition:border-color .2s}
+.fi:focus,.fs:focus{outline:none;border-color:var(--navy-lt);box-shadow:0 0 0 3px rgba(0,64,128,.1)}
+.fi::placeholder{color:#aaa;font-weight:400}
+.fi.ro{background:#e9ecef;cursor:not-allowed}
+.fr{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+
+/* BUTTONS */
+.btn{padding:10px 18px;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;text-transform:uppercase;letter-spacing:.5px;font-family:'Oswald',Arial,sans-serif;transition:all .2s;border:2px solid;display:inline-flex;align-items:center;gap:7px}
+.b-navy{background:var(--navy);color:var(--white);border-color:var(--navy)}.b-navy:hover{background:var(--navy-lt)}
+.b-gold{background:var(--gold);color:#000;border-color:var(--gold)}.b-gold:hover{background:var(--gold-dk)}
+.b-green{background:var(--green);color:var(--white);border-color:var(--green)}.b-green:hover{background:#218838}
+.b-out{background:var(--white);color:var(--navy);border-color:var(--navy)}.b-out:hover{background:var(--navy);color:var(--white)}
+.b-full{width:100%;justify-content:center}
+.b-sm{padding:6px 12px;font-size:11px}
+.btn:disabled{opacity:.65;cursor:wait}
+@keyframes spin{to{transform:rotate(360deg)}}
+.btn:disabled::after{content:'';display:inline-block;width:11px;height:11px;border:2px solid currentColor;border-top-color:transparent;border-radius:50%;animation:spin .8s linear infinite}
+
+/* MAIN */
+.main{display:none;padding:18px}
+.main.on{display:block}
+.wrap{max-width:1100px;margin:0 auto}
+
+/* HEADER */
+.ph{background:var(--navy);color:var(--white);padding:18px 28px;border-radius:8px 8px 0 0;text-align:center}
+.ph-logos{display:flex;justify-content:center;gap:18px;margin-bottom:10px}
+.ph-lb{background:var(--white);border-radius:6px;padding:7px}
+.ph-lb img{width:70px;height:auto}
+.ph h3{font-size:12px;font-weight:700;letter-spacing:1px;margin-bottom:2px}
+.ph .tag{font-size:10px;font-style:italic;opacity:.85;margin-bottom:10px}
+.ph h1{font-size:20px;font-weight:700;letter-spacing:1px;margin-bottom:4px}
+.ph .sub{font-size:12px;opacity:.9}
+
+/* CARD */
+.card{background:var(--white);border:4px double var(--navy);border-top:none;border-radius:0 0 8px 8px;padding:22px;margin-bottom:18px}
+
+/* SECTION */
+.sh{background:var(--navy);color:var(--white);padding:11px 16px;border-radius:6px;display:flex;align-items:center;gap:10px;margin-bottom:14px}
+.si{background:var(--white);color:var(--navy);width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0}
+.st{font-size:13px;font-weight:700;letter-spacing:.5px}
+
+/* DATASET LIST */
+.ds-list{max-height:340px;overflow-y:auto;border:2px solid var(--border);border-radius:6px;margin-bottom:10px}
+.ds-item{padding:10px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;cursor:pointer;transition:background .15s;font-size:13px}
+.ds-item:last-child{border-bottom:none}
+.ds-item:hover{background:#e7f3ff}
+.ds-item.sel{background:#d4edda}
+.ds-item input[type=checkbox]{accent-color:var(--navy);width:15px;height:15px;cursor:pointer;flex-shrink:0}
+.ds-name{flex:1}
+.ds-meta{font-size:10px;color:var(--muted);font-weight:400}
+.lc{display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap;align-items:center}
+.si-inp{padding:6px 12px;border:2px solid var(--border);border-radius:6px;font-family:'Oswald',sans-serif;font-size:12px;flex:1;min-width:150px}
+.si-inp:focus{outline:none;border-color:var(--navy)}
+
+/* PERIOD */
+.ptabs{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap}
+.ptab{padding:7px 14px;background:var(--white);border:2px solid var(--navy);border-radius:6px;cursor:pointer;font-size:11px;font-weight:700;font-family:'Oswald',sans-serif;text-transform:uppercase;transition:all .2s}
+.ptab:hover{background:#e7f3ff}
+.ptab.on{background:var(--navy);color:var(--white)}
+.pi{display:none}.pi.on{display:block}
+
+/* INFO BOX */
+.ib{background:#fff3cd;border:2px solid var(--gold);border-radius:6px;padding:10px 14px;margin-bottom:14px;font-size:12px;color:#856404}
+.ib.green{background:#d4edda;border-color:var(--green);color:#155724}
+.ib.blue{background:#e7f3ff;border-color:var(--navy);color:var(--navy)}
+
+/* PROGRESS */
+.prog-s{display:none;background:#f8f9fa;border:2px solid var(--navy);border-radius:8px;padding:14px;margin-top:14px}
+.prog-s.on{display:block}
+.pbar{height:22px;background:#e9ecef;border-radius:6px;overflow:hidden;border:2px solid var(--navy);margin-bottom:10px}
+.pfill{height:100%;background:linear-gradient(90deg,var(--navy),var(--navy-lt));transition:width .3s;display:flex;align-items:center;justify-content:center;color:var(--white);font-size:11px;font-weight:700;min-width:36px}
+.logc{max-height:200px;overflow-y:auto;background:#1a1a2e;border-radius:6px;padding:10px;font-family:'Courier New',monospace;font-size:11px}
+.le{padding:2px 0;border-bottom:1px solid #2a2a3e}
+.le.info{color:#17a2b8}.le.success{color:#28a745}.le.error{color:#dc3545}.le.warning{color:#ffc107}
+
+/* DOWNLOAD CARDS */
+.dl-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:18px}
+.dl-card{border:3px solid var(--border);border-radius:8px;padding:18px;text-align:center;transition:all .2s}
+.dl-card:hover{border-color:var(--navy);box-shadow:0 4px 16px rgba(0,64,128,.15)}
+.dl-card .dl-icon{font-size:36px;margin-bottom:8px}
+.dl-card h3{font-size:14px;font-weight:700;color:var(--navy);margin-bottom:6px}
+.dl-card p{font-size:11px;color:var(--muted);font-weight:400;margin-bottom:14px;line-height:1.5}
+.dl-card .badge{display:inline-block;background:var(--bg);border:1px solid var(--border);border-radius:12px;padding:2px 10px;font-size:10px;font-weight:600;color:var(--muted);margin-bottom:12px}
+.dl-card.meta-card{border-color:#0056b3;background:linear-gradient(135deg,#f0f4ff,#fff)}
+.dl-card.data-card{border-color:var(--green);background:linear-gradient(135deg,#f0fff4,#fff)}
+
+/* NOTIFICATION */
+.ntf{position:fixed;top:20px;left:50%;transform:translateX(-50%);padding:12px 24px;border-radius:8px;font-weight:700;z-index:2000;display:none;box-shadow:0 4px 16px rgba(0,0,0,.2);font-size:13px;font-family:'Oswald',sans-serif}
+.ntf.s{background:#d4edda;color:#155724;border:2px solid var(--green);display:block}
+.ntf.e{background:#f8d7da;color:#721c24;border:2px solid var(--red);display:block}
+.ntf.i{background:#e7f3ff;color:var(--navy);border:2px solid var(--navy);display:block}
+
+/* FOOTER */
+.pf{background:var(--navy);color:var(--white);padding:14px 24px;text-align:center;font-size:11px;line-height:1.8;border-radius:0 0 8px 8px}
+
+/* SCROLLBAR */
+::-webkit-scrollbar{width:6px;height:6px}
+::-webkit-scrollbar-track{background:#f8f9fa;border-radius:4px}
+::-webkit-scrollbar-thumb{background:var(--navy);border-radius:4px}
+
+@media(max-width:700px){.dl-grid{grid-template-columns:1fr}.fr{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div class="login-screen" id="loginScreen">
+  <div class="login-card">
+    <div class="logo-wrap">
+      <div class="logo-box">
+        <img src="https://github.com/mohamedsillahkanu/gdp-dashboard-2/raw/6c7463b0d5c3be150aafae695a4bcbbd8aeb1499/ICF-SL.jpg" alt="ICF-SL">
+      </div>
+    </div>
+    <div class="login-hdr">
+      <h1>DHIS2 DATASET EXPORT</h1>
+      <p>Export metadata &amp; data values for migration or backup</p>
+    </div>
+    <form id="loginForm">
+      <div class="fg">
+        <label class="fl">DHIS2 Instance URL</label>
+        <input class="fi ro" id="url" type="url" value="https://sl.dhis2.org/hmis23" readonly>
+      </div>
+      <div class="fr">
+        <div class="fg">
+          <label class="fl">Username</label>
+          <input class="fi ro" id="user" type="text" value="musa-sillahkanu" readonly>
+        </div>
+        <div class="fg">
+          <label class="fl">Password</label>
+          <input class="fi ro" id="pass" type="password" value="Navigator/2024!" readonly>
+        </div>
+      </div>
+      <button type="submit" class="btn b-navy b-full">Connect to DHIS2</button>
+    </form>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div class="main" id="main">
+  <div class="wrap">
+
+    <div class="ph">
+      <div class="ph-logos">
+        <div class="ph-lb"><img src="https://github.com/mohamedsillahkanu/gdp-dashboard-2/raw/6c7463b0d5c3be150aafae695a4bcbbd8aeb1499/ICF-SL.jpg" alt="ICF-SL"></div>
+      </div>
+      <h3>Informatics Consultancy Firm-Sierra Leone (ICF-SL)</h3>
+      <p class="tag">Driving Data-Driven Solutions for Health and Development</p>
+      <h1>DHIS2 DATASET EXPORT TOOL</h1>
+      <p class="sub">Download metadata &amp; data values — upload manually into target DHIS2</p>
+    </div>
+
+    <div class="card">
+
+      <!-- STEP 1: SELECT DATASETS -->
+      <div class="sh"><span class="si">1</span><span class="st">SELECT DATASETS</span></div>
+      <div class="ib blue">Select the datasets you want to export. Both downloads below will be based on your selection.</div>
+      <div class="lc">
+        <button class="btn b-out b-sm" onclick="loadDS()">Load Datasets</button>
+        <button class="btn b-out b-sm" onclick="selAll()">Select All</button>
+        <button class="btn b-sm" style="background:#fff;color:var(--red);border:2px solid var(--red);" onclick="clrAll()">Clear All</button>
+        <input class="si-inp" placeholder="Search datasets..." oninput="filt(this.value)">
+      </div>
+      <div class="ds-list" id="dsList"><div style="padding:20px;text-align:center;color:var(--muted);">Click "Load Datasets" to begin</div></div>
+      <div style="font-size:11px;color:var(--muted);margin-top:6px;">Selected: <strong id="selCnt">0</strong> datasets</div>
+
+      <!-- STEP 2: PERIOD -->
+      <div class="sh" style="margin-top:22px;"><span class="si">2</span><span class="st">SELECT PERIOD (for data values export)</span></div>
+      <div class="ptabs">
+        <div class="ptab on" onclick="setPT('monthly',this)">Monthly</div>
+        <div class="ptab" onclick="setPT('range',this)">Date Range</div>
+        <div class="ptab" onclick="setPT('yearly',this)">Yearly</div>
+      </div>
+      <div class="pi on" id="pi-monthly">
+        <div class="fg" style="max-width:220px;"><label class="fl">Month</label><input class="fi" type="month" id="pMonth"></div>
+      </div>
+      <div class="pi" id="pi-range">
+        <div class="fr" style="max-width:440px;">
+          <div class="fg"><label class="fl">From</label><input class="fi" type="month" id="pFrom"></div>
+          <div class="fg"><label class="fl">To</label><input class="fi" type="month" id="pTo"></div>
+        </div>
+      </div>
+      <div class="pi" id="pi-yearly">
+        <div class="fr" style="max-width:440px;">
+          <div class="fg"><label class="fl">Start Year</label><input class="fi" type="number" id="yFrom" min="2000" max="2030" placeholder="2020"></div>
+          <div class="fg"><label class="fl">End Year</label><input class="fi" type="number" id="yTo" min="2000" max="2030" placeholder="2025"></div>
+        </div>
+      </div>
+
+      <!-- STEP 3: DOWNLOADS -->
+      <div class="sh" style="margin-top:22px;"><span class="si">3</span><span class="st">DOWNLOAD FILES</span></div>
+      <div class="ib">After downloading, go to your target DHIS2 instance → <strong>Import/Export app</strong> → upload the files manually. Import metadata first, then data values.</div>
+
+      <div class="dl-grid">
+
+        <!-- METADATA CARD -->
+        <div class="dl-card meta-card">
+          <div class="dl-icon">📦</div>
+          <h3>METADATA EXPORT</h3>
+          <div class="badge" id="metaBadge">No datasets selected</div>
+          <p>Downloads all dependencies:<br>datasets, data elements, categories, category combos, category options, category option combos, option sets, indicators, validation rules, legend sets, org unit levels, org unit groups, attributes, data element groups</p>
+          <button class="btn b-navy b-full" onclick="expMeta()" id="expMetaBtn">⬇ Download Metadata JSON</button>
+          <div class="prog-s" id="metaProg">
+            <div class="pbar"><div class="pfill" id="metaFill" style="width:0%">0%</div></div>
+            <div class="logc" id="metaLog"></div>
+          </div>
+        </div>
+
+        <!-- DATA VALUES CARD -->
+        <div class="dl-card data-card">
+          <div class="dl-icon">📊</div>
+          <h3>DATA VALUES EXPORT</h3>
+          <div class="badge" id="dataBadge">No datasets selected</div>
+          <p>Downloads actual data values for selected datasets and period. Includes data element IDs, org unit IDs, periods, category option combos and values.</p>
+          <button class="btn b-green b-full" onclick="expData()" id="expDataBtn">⬇ Download Data Values JSON</button>
+          <div class="prog-s" id="dataProg">
+            <div class="pbar"><div class="pfill" id="dataFill" style="width:0%">0%</div></div>
+            <div class="logc" id="dataLog"></div>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+
+    <div class="pf">
+      <strong>Informatics Consultancy Firm-Sierra Leone (ICF-SL)</strong><br>
+      Driving Data-Driven Solutions for Health and Development<br>
+      <span style="font-size:10px;">© 2025 ICF-SL — DHIS2 Dataset Export Tool</span>
+    </div>
+  </div>
+</div>
+
+<div class="ntf" id="ntf"></div>
+
+<script>
+const PROXY='https://script.google.com/macros/s/AKfycbyRXc68PYSmDSCYPakAS8Gc9R00kRjmsMYoDujPYMItyquXfwMAJUtRqXLiDlNWbSfDQQ/exec';
+const S={src:null,allDS:[],selDS:new Set(),pt:'monthly'};
+
+// ── PROXY ──────────────────────────────────────────────────────────────────
+function srcGet(path){
+  const u=`${PROXY}?url=${encodeURIComponent(S.src.url+path)}&Authorization=${encodeURIComponent(S.src.auth)}`;
+  return fetch(u);
+}
+function authHdr(u,p){return 'Basic '+btoa(u+':'+p)}
+
+// ── NOTIFY ─────────────────────────────────────────────────────────────────
+function ntf(msg,t='i'){const el=document.getElementById('ntf');el.textContent=msg;el.className='ntf '+t;setTimeout(()=>el.className='ntf',4000)}
+
+// ── LOG / PROGRESS ─────────────────────────────────────────────────────────
+function lg(id,msg,t='info'){const c=document.getElementById(id);if(!c)return;const d=document.createElement('div');d.className='le '+t;d.textContent=`[${new Date().toLocaleTimeString()}] ${msg}`;c.appendChild(d);c.scrollTop=c.scrollHeight}
+function sp(id,pct){const el=document.getElementById(id);if(!el)return;el.style.width=pct+'%';el.textContent=pct+'%'}
+function shProg(id){document.getElementById(id).classList.add('on')}
+
+// ── LOGIN ──────────────────────────────────────────────────────────────────
+document.getElementById('loginForm').addEventListener('submit',async e=>{
+  e.preventDefault();
+  const url=document.getElementById('url').value.trim().replace(/\/$/,'');
+  const user=document.getElementById('user').value.trim();
+  const pass=document.getElementById('pass').value.trim();
+  const btn=e.target.querySelector('.btn');btn.disabled=true;
+  try{
+    ntf('Connecting...','i');
+    const auth=authHdr(user,pass);
+    const res=await fetch(`${PROXY}?url=${encodeURIComponent(url+'/api/me')}&Authorization=${encodeURIComponent(auth)}`);
+    if(res.ok){
+      const me=await res.json();
+      S.src={url,auth};
+      document.getElementById('loginScreen').style.display='none';
+      document.getElementById('main').classList.add('on');
+      ntf(`Connected as ${me.firstName||''} ${me.surname||''}`.trim(),'s');
+    }else{ntf('Login failed — check credentials','e');}
+  }catch(err){ntf('Error: '+err.message,'e');}
+  finally{btn.disabled=false;}
+});
+
+// ── LOAD DATASETS ──────────────────────────────────────────────────────────
+async function loadDS(){
+  const btn=document.querySelector('button[onclick="loadDS()"]');
+  btn.disabled=true;btn.textContent='Loading...';
+  try{
+    ntf('Loading datasets...','i');
+    const res=await srcGet('/api/dataSets.json?fields=id,displayName,periodType,dataSetElements[dataElement[id]]&paging=false');
+    if(!res.ok)throw new Error(res.status);
+    const d=await res.json();
+    S.allDS=d.dataSets||[];
+    renderDS(S.allDS);
+    ntf(`Loaded ${S.allDS.length} datasets`,'s');
+  }catch(err){ntf('Failed: '+err.message,'e');}
+  finally{btn.disabled=false;btn.textContent='Load Datasets';}
+}
+
+function renderDS(list){
+  const c=document.getElementById('dsList');
+  if(!list.length){c.innerHTML='<div style="padding:18px;text-align:center;color:var(--muted);">No datasets found</div>';return;}
+  c.innerHTML='';
+  list.forEach(ds=>{
+    const div=document.createElement('div');
+    div.className='ds-item'+(S.selDS.has(ds.id)?' sel':'');
+    div.dataset.id=ds.id;
+    div.innerHTML=`<input type="checkbox" ${S.selDS.has(ds.id)?'checked':''} onchange="tog('${ds.id}',this.checked)">
+      <div class="ds-name">${ds.displayName}<div class="ds-meta">${ds.periodType||''} · ${(ds.dataSetElements||[]).length} elements · ${ds.id}</div></div>`;
+    div.onclick=e=>{if(e.target.tagName!=='INPUT'){const cb=div.querySelector('input');cb.checked=!cb.checked;tog(ds.id,cb.checked);}};
+    c.appendChild(div);
+  });
+  updCnt();
+}
+
+function tog(id,checked){
+  if(checked)S.selDS.add(id);else S.selDS.delete(id);
+  const item=document.querySelector(`.ds-item[data-id="${id}"]`);
+  if(item){item.classList.toggle('sel',checked);item.querySelector('input').checked=checked;}
+  updCnt();
+}
+
+function selAll(){S.allDS.forEach(ds=>{S.selDS.add(ds.id);const i=document.querySelector(`.ds-item[data-id="${ds.id}"]`);if(i){i.classList.add('sel');i.querySelector('input').checked=true;}});updCnt();}
+function clrAll(){S.selDS.clear();document.querySelectorAll('.ds-item').forEach(i=>{i.classList.remove('sel');i.querySelector('input').checked=false;});updCnt();}
+function filt(q){document.querySelectorAll('.ds-item').forEach(i=>{i.style.display=i.querySelector('.ds-name').textContent.toLowerCase().includes(q.toLowerCase())?'':'none';});}
+
+function updCnt(){
+  const n=S.selDS.size;
+  document.getElementById('selCnt').textContent=n;
+  const deCount=S.allDS.filter(ds=>S.selDS.has(ds.id)).reduce((s,ds)=>s+(ds.dataSetElements||[]).length,0);
+  document.getElementById('metaBadge').textContent=n?`${n} datasets · ${deCount} data elements`:'No datasets selected';
+  document.getElementById('dataBadge').textContent=n?`${n} datasets selected`:'No datasets selected';
+}
+
+// ── PERIOD ─────────────────────────────────────────────────────────────────
+function setPT(t,el){S.pt=t;document.querySelectorAll('.ptab').forEach(x=>x.classList.remove('on'));document.querySelectorAll('.pi').forEach(x=>x.classList.remove('on'));el.classList.add('on');document.getElementById('pi-'+t).classList.add('on');}
+
+function getPP(){
+  if(S.pt==='monthly'){const m=document.getElementById('pMonth').value;return m?'period='+m.replace('-',''):null;}
+  if(S.pt==='range'){const f=document.getElementById('pFrom').value,t=document.getElementById('pTo').value;if(!f||!t)return null;const[sy,sm]=f.split('-');const[ey,em]=t.split('-');const ld=new Date(+ey,+em,0).getDate();return `startDate=${sy}-${sm}-01&endDate=${ey}-${em}-${ld}`;}
+  const fy=document.getElementById('yFrom').value,ty=document.getElementById('yTo').value;
+  return fy?`startDate=${fy}-01-01&endDate=${ty||fy}-12-31`:null;
+}
+
+function today(){return new Date().toISOString().split('T')[0];}
+function dl(data,name){const b=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=name;a.click();}
+
+// ── EXPORT METADATA ────────────────────────────────────────────────────────
+async function expMeta(){
+  if(!S.selDS.size){ntf('Select at least one dataset','e');return;}
+  const btn=document.getElementById('expMetaBtn');btn.disabled=true;
+  shProg('metaProg');sp('metaFill',0);
+  const g=async path=>{const r=await srcGet(path);return r.ok?await r.json():{}};
+  try{
+    const ids=Array.from(S.selDS).join(',');
+
+    lg('metaLog','[1/15] Datasets (full fields)...','info');
+    const dsR=await srcGet(`/api/dataSets.json?filter=id:in:[${ids}]&fields=id,name,displayName,shortName,code,description,periodType,openFuturePeriods,expiryDays,timelyDays,renderAsTabs,renderHorizontally,mobile,fieldCombinationRequired,validCompleteOnly,noValueRequiresComment,skipOffline,categoryCombo[id],dataSetElements[dataElement[id,name,displayName,shortName,code,description,valueType,aggregationType,domainType,zeroIsSignificant,url,formName,optionSet[id],commentOptionSet[id],categoryCombo[id],dataElementGroups[id],legendSets[id]],categoryCombo[id],compulsory],organisationUnits[id],sections[id,name,displayName,description,sortOrder,showRowTotals,showColumnTotals,dataElements[id],indicators[id],greyedFields[dataElement[id],categoryOptionCombo[id]]],dataInputPeriods[period,openingDate,closingDate],indicators[id],legendSets[id]&paging=false`);
+    if(!dsR.ok)throw new Error('Datasets: '+dsR.status);
+    const dsD=await dsR.json();
+    sp('metaFill',7);lg('metaLog',`  → ${(dsD.dataSets||[]).length} datasets`,'success');
+
+    lg('metaLog','[2/15] Data elements...','info');
+    const deIds=[...new Set((dsD.dataSets||[]).flatMap(ds=>(ds.dataSetElements||[]).map(e=>e.dataElement?.id).filter(Boolean)))];
+    let deD={dataElements:[]};
+    if(deIds.length){const r=await srcGet(`/api/dataElements.json?filter=id:in:[${deIds.join(',')}]&fields=id,name,displayName,shortName,code,description,valueType,aggregationType,domainType,zeroIsSignificant,url,formName,fieldMask,optionSet[id],commentOptionSet[id],categoryCombo[id],dataElementGroups[id],legendSets[id]&paging=false`);if(r.ok)deD=await r.json();}
+    sp('metaFill',14);lg('metaLog',`  → ${deD.dataElements.length} data elements`,'success');
+
+    lg('metaLog','[3/15] Category options...','info');
+    const coD=await g('/api/categoryOptions.json?fields=id,name,displayName,shortName,code,description,startDate,endDate,organisationUnits[id]&paging=false');
+    sp('metaFill',21);lg('metaLog',`  → ${(coD.categoryOptions||[]).length} category options`,'success');
+
+    lg('metaLog','[4/15] Categories...','info');
+    const catD=await g('/api/categories.json?fields=id,name,displayName,shortName,code,description,dataDimensionType,categoryOptions[id]&paging=false');
+    sp('metaFill',28);lg('metaLog',`  → ${(catD.categories||[]).length} categories`,'success');
+
+    lg('metaLog','[5/15] Category combos...','info');
+    const ccD=await g('/api/categoryCombos.json?fields=id,name,displayName,code,dataDimensionType,skipTotal,categories[id]&paging=false');
+    sp('metaFill',35);lg('metaLog',`  → ${(ccD.categoryCombos||[]).length} category combos`,'success');
+
+    lg('metaLog','[6/15] Category option combos...','info');
+    const cocD=await g('/api/categoryOptionCombos.json?fields=id,name,displayName,code,categoryOptions[id],categoryCombo[id]&paging=false');
+    sp('metaFill',42);lg('metaLog',`  → ${(cocD.categoryOptionCombos||[]).length} COCs`,'success');
+
+    lg('metaLog','[7/15] Option sets...','info');
+    const osD=await g('/api/optionSets.json?fields=id,name,displayName,code,valueType,options[id,name,displayName,code,sortOrder]&paging=false');
+    sp('metaFill',49);lg('metaLog',`  → ${(osD.optionSets||[]).length} option sets`,'success');
+
+    lg('metaLog','[8/15] Legend sets...','info');
+    const lsD=await g('/api/legendSets.json?fields=id,name,displayName,symbolizer,legends[id,name,startValue,endValue,color]&paging=false');
+    sp('metaFill',54);lg('metaLog',`  → ${(lsD.legendSets||[]).length} legend sets`,'success');
+
+    lg('metaLog','[9/15] Data element groups + group sets...','info');
+    const degD=await g('/api/dataElementGroups.json?fields=id,name,displayName,shortName,code,dataElements[id]&paging=false');
+    const degsD=await g('/api/dataElementGroupSets.json?fields=id,name,displayName,shortName,code,compulsory,dataDimension,dataElementGroups[id]&paging=false');
+    sp('metaFill',60);lg('metaLog',`  → ${(degD.dataElementGroups||[]).length} groups`,'success');
+
+    lg('metaLog','[10/15] Indicator types + indicators...','info');
+    const itD=await g('/api/indicatorTypes.json?fields=id,name,displayName,factor,number&paging=false');
+    const indD=await g('/api/indicators.json?fields=id,name,displayName,shortName,code,description,annualized,indicatorType[id],numerator,numeratorDescription,denominator,denominatorDescription&paging=false');
+    const igD=await g('/api/indicatorGroups.json?fields=id,name,displayName,code,indicators[id]&paging=false');
+    sp('metaFill',67);lg('metaLog',`  → ${(indD.indicators||[]).length} indicators`,'success');
+
+    lg('metaLog','[11/15] Validation rules...','info');
+    const vrD=await g('/api/validationRules.json?fields=id,name,displayName,code,description,operator,periodType,leftSide[expression,description,missingValueStrategy],rightSide[expression,description,missingValueStrategy]&paging=false');
+    const vrgD=await g('/api/validationRuleGroups.json?fields=id,name,displayName,validationRules[id]&paging=false');
+    sp('metaFill',73);lg('metaLog',`  → ${(vrD.validationRules||[]).length} rules`,'success');
+
+    lg('metaLog','[12/15] Attributes...','info');
+    const attrD=await g('/api/attributes.json?fields=id,name,displayName,code,valueType,mandatory,unique,dataSetAttribute,dataElementAttribute,categoryAttribute,categoryOptionAttribute,categoryComboAttribute,categoryOptionComboAttribute,organisationUnitAttribute&paging=false');
+    sp('metaFill',78);lg('metaLog',`  → ${(attrD.attributes||[]).length} attributes`,'success');
+
+    lg('metaLog','[13/15] Org unit levels + groups...','info');
+    const levD=await g('/api/organisationUnitLevels.json?fields=id,name,displayName,level&paging=false');
+    const ougD=await g('/api/organisationUnitGroups.json?fields=id,name,displayName,shortName,code,symbol,color,organisationUnits[id]&paging=false');
+    const ougsD=await g('/api/organisationUnitGroupSets.json?fields=id,name,displayName,shortName,code,compulsory,dataDimension,organisationUnitGroups[id]&paging=false');
+    sp('metaFill',84);lg('metaLog',`  → ${(levD.organisationUnitLevels||[]).length} levels, ${(ougD.organisationUnitGroups||[]).length} groups`,'success');
+
+    lg('metaLog','[14/15] All org units...','info');
+    const ouD=await g('/api/organisationUnits.json?fields=id,name,displayName,shortName,code,description,openingDate,level,parent[id],featureType,contactPerson,address,email,phoneNumber,organisationUnitGroups[id]&paging=false');
+    sp('metaFill',92);lg('metaLog',`  → ${(ouD.organisationUnits||[]).length} org units`,'success');
+
+    lg('metaLog','[15/15] User groups...','info');
+    const ugD=await g('/api/userGroups.json?fields=id,name,displayName,code&paging=false');
+    sp('metaFill',96);lg('metaLog',`  → ${(ugD.userGroups||[]).length} user groups`,'success');
+
+    const payload={
+      exported:new Date().toISOString(),source:S.src.url,
+      // dependency order for import
+      attributes:attrD.attributes||[],
+      legendSets:lsD.legendSets||[],
+      optionSets:osD.optionSets||[],
+      categoryOptions:coD.categoryOptions||[],
+      categories:catD.categories||[],
+      categoryCombos:ccD.categoryCombos||[],
+      categoryOptionCombos:cocD.categoryOptionCombos||[],
+      organisationUnitLevels:levD.organisationUnitLevels||[],
+      organisationUnitGroups:ougD.organisationUnitGroups||[],
+      organisationUnitGroupSets:ougsD.organisationUnitGroupSets||[],
+      organisationUnits:ouD.organisationUnits||[],
+      dataElementGroupSets:degsD.dataElementGroupSets||[],
+      dataElements:deD.dataElements||[],
+      dataElementGroups:degD.dataElementGroups||[],
+      indicatorTypes:itD.indicatorTypes||[],
+      indicators:indD.indicators||[],
+      indicatorGroups:igD.indicatorGroups||[],
+      validationRules:vrD.validationRules||[],
+      validationRuleGroups:vrgD.validationRuleGroups||[],
+      userGroups:ugD.userGroups||[],
+      dataSets:dsD.dataSets||[]
+    };
+
+    dl(payload,`nmdr_metadata_${today()}.json`);
+    sp('metaFill',100);
+    lg('metaLog','═══════════════════════════════════════','success');
+    lg('metaLog','✅ METADATA EXPORT COMPLETE','success');
+    lg('metaLog',`  Datasets: ${(dsD.dataSets||[]).length} · Data Elements: ${deD.dataElements.length}`,'success');
+    lg('metaLog',`  Cat Options: ${(coD.categoryOptions||[]).length} · Cat Combos: ${(ccD.categoryCombos||[]).length} · COCs: ${(cocD.categoryOptionCombos||[]).length}`,'success');
+    lg('metaLog',`  Option Sets: ${(osD.optionSets||[]).length} · Legend Sets: ${(lsD.legendSets||[]).length}`,'success');
+    lg('metaLog',`  Indicators: ${(indD.indicators||[]).length} · Val Rules: ${(vrD.validationRules||[]).length}`,'success');
+    lg('metaLog',`  Org Units: ${(ouD.organisationUnits||[]).length} · OU Groups: ${(ougD.organisationUnitGroups||[]).length}`,'success');
+    lg('metaLog','  → Upload this file to: Import/Export → Metadata Import','success');
+    lg('metaLog','═══════════════════════════════════════','success');
+    ntf('Metadata JSON downloaded!','s');
+  }catch(err){lg('metaLog','ERROR: '+err.message,'error');ntf('Export failed: '+err.message,'e');}
+  finally{btn.disabled=false;}
+}
+
+// ── EXPORT DATA VALUES ─────────────────────────────────────────────────────
+async function expData(){
+  if(!S.selDS.size){ntf('Select at least one dataset','e');return;}
+  const pp=getPP();if(!pp){ntf('Please select a period','e');return;}
+  const btn=document.getElementById('expDataBtn');btn.disabled=true;
+  shProg('dataProg');sp('dataFill',0);
+  try{
+    lg('dataLog','Fetching org units...','info');
+    const ouR=await srcGet('/api/organisationUnits.json?fields=id&paging=false');
+    if(!ouR.ok)throw new Error('Org units: '+ouR.status);
+    const ouD=await ouR.json();
+    const ouIds=(ouD.organisationUnits||[]).map(o=>o.id);
+    lg('dataLog',`Found ${ouIds.length} org units`,'info');
+    sp('dataFill',10);
+
+    const dsIds=Array.from(S.selDS);
+    const B=50; // org unit batch size
+    const batches=[];
+    for(let i=0;i<ouIds.length;i+=B)batches.push(ouIds.slice(i,i+B));
+
+    lg('dataLog',`Downloading data in ${batches.length} batches...`,'info');
+    let allVals=[];
+    for(let i=0;i<batches.length;i++){
+      sp('dataFill',Math.round(10+(i/batches.length)*85));
+      const url=`/api/dataValueSets.json?dataSet=${dsIds.join(',')}&orgUnit=${batches[i].join(',')}&${pp}`;
+      const r=await srcGet(url);
+      if(r.ok){const d=await r.json();if(d.dataValues)allVals=allVals.concat(d.dataValues);}
+      if(i%20===0)lg('dataLog',`Batch ${i+1}/${batches.length} — ${allVals.length} values so far`,'info');
+      await new Promise(r=>setTimeout(r,80));
+    }
+
+    sp('dataFill',97);
+    const payload={exported:new Date().toISOString(),source:S.src.url,period:pp,dataValues:allVals};
+    dl(payload,`nmdr_data_${today()}.json`);
+    sp('dataFill',100);
+    lg('dataLog','═══════════════════════════════════════','success');
+    lg('dataLog',`✅ DATA EXPORT COMPLETE: ${allVals.length} values`,'success');
+    lg('dataLog','  → Upload to: Import/Export → Data Import','success');
+    lg('dataLog','═══════════════════════════════════════','success');
+    ntf(`Downloaded ${allVals.length} data values!`,'s');
+  }catch(err){lg('dataLog','ERROR: '+err.message,'error');ntf('Export failed: '+err.message,'e');}
+  finally{btn.disabled=false;}
+}
+</script>
+</body>
+</html>

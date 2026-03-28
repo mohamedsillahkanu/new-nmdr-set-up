@@ -1,0 +1,791 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Validated Routine Malaria Data Elements — ICF-SL</title>
+<meta name="theme-color" content="#2c6793">
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Source+Sans+3:wght@300;400;600&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --blue:       #2c6793;
+  --blue-dark:  #1e4d6e;
+  --blue-light: #3a7aaa;
+  --blue-pale:  #e8f0f7;
+  --white:      #ffffff;
+  --bg:         #f4f6f8;
+  --surface:    #ffffff;
+  --border:     #d5dde5;
+  --border2:    #e8edf2;
+  --text:       #212934;
+  --muted:      #6c7a89;
+  --chip-bg:    #e8f0f7;
+  --success:    #1a8a4a;
+  --success-bg: #e8f5ee;
+  --warn:       #b05a00;
+}
+
+body {
+  font-family: 'Source Sans 3', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── TOPBAR ── */
+.topbar {
+  background: linear-gradient(135deg, var(--blue-dark) 0%, var(--blue) 100%);
+  height: 56px;
+  display: flex;
+  align-items: center;
+  padding: 0 20px;
+  gap: 14px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  border-bottom: 3px solid rgba(255,255,255,0.25);
+}
+
+.topbar-logo {
+  width: 38px;
+  height: 38px;
+  background: var(--white);
+  border: 2px solid rgba(255,255,255,0.5);
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.topbar-logo span {
+  font-family: 'Oswald', sans-serif;
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--blue);
+  letter-spacing: 1px;
+}
+
+.topbar-divider {
+  width: 1px;
+  height: 28px;
+  background: rgba(255,255,255,0.2);
+}
+
+.topbar-title {
+  font-family: 'Oswald', sans-serif;
+  color: rgba(255,255,255,0.95);
+  font-size: 17px;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+  flex: 1;
+}
+
+.topbar-badge {
+  background: rgba(255,255,255,0.15);
+  color: var(--white);
+  border: 1px solid rgba(255,255,255,0.3);
+  font-family: 'Oswald', sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 2px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+/* ── SUBHEADER ── */
+.subheader {
+  background: var(--surface);
+  border-bottom: 2px solid var(--border);
+  padding: 14px 28px 16px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+}
+
+.subheader-left h1 {
+  font-family: 'Oswald', sans-serif;
+  font-size: 22px;
+  font-weight: 600;
+  color: var(--blue);
+  letter-spacing: 0.5px;
+  margin-bottom: 8px;
+}
+
+.meta-chips {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.meta-chip {
+  display: inline-flex;
+  align-items: center;
+  background: var(--chip-bg);
+  color: var(--blue);
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: 2px;
+  border: 1px solid rgba(44,103,147,0.2);
+  font-family: 'Oswald', sans-serif;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.subheader-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+}
+
+.subheader-stats {
+  display: flex;
+  gap: 24px;
+}
+
+.stat-block { text-align: right; }
+
+.stat-value {
+  font-family: 'Oswald', sans-serif;
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--blue);
+  line-height: 1;
+  display: block;
+}
+
+.stat-label {
+  font-size: 10px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  font-weight: 600;
+}
+
+/* ── YEAR TOGGLE ── */
+.year-toggle-wrap {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.year-toggle-label {
+  font-family: 'Oswald', sans-serif;
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--muted);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  margin-right: 2px;
+}
+
+.yr-btn {
+  font-family: 'Oswald', sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  color: var(--blue);
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  padding: 4px 9px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.yr-btn:hover {
+  background: var(--chip-bg);
+  border-color: var(--blue);
+}
+
+.yr-btn.active {
+  background: var(--blue);
+  color: var(--white);
+  border-color: var(--blue);
+  box-shadow: 0 2px 6px rgba(44,103,147,0.3);
+}
+
+/* ── MAIN ── */
+.main {
+  flex: 1;
+  padding: 24px 28px 40px;
+}
+
+.section-label {
+  font-family: 'Oswald', sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.section-label span.yr-highlight {
+  color: var(--blue);
+  font-size: 14px;
+}
+
+.section-label::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(to right, var(--border), transparent);
+}
+
+.cards-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+}
+
+/* ── CARD ── */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-top: none;
+  border-radius: 4px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+  animation: cardIn 0.4s ease both;
+  transition: box-shadow 0.2s, transform 0.2s;
+}
+
+@keyframes cardIn {
+  from { opacity:0; transform:translateY(14px); }
+  to   { opacity:1; transform:translateY(0); }
+}
+
+.card:hover {
+  box-shadow: 0 6px 22px rgba(44,103,147,0.14);
+  transform: translateY(-2px);
+}
+
+.card-stripe-outer { height: 5px; background: var(--blue); }
+.card-stripe-inner { height: 2px; background: rgba(44,103,147,0.25); }
+
+.card-body {
+  padding: 16px 18px 14px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.card-header-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.card-icon {
+  width: 40px;
+  height: 40px;
+  background: var(--chip-bg);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.card-icon svg {
+  width: 18px;
+  height: 18px;
+  fill: none;
+  stroke: var(--blue);
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.card-title-wrap { flex: 1; }
+
+.card-num {
+  font-family: 'Oswald', sans-serif;
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--muted);
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  margin-bottom: 2px;
+}
+
+.card-name {
+  font-family: 'Oswald', sans-serif;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--blue);
+  line-height: 1.3;
+  letter-spacing: 0.3px;
+}
+
+.card-region {
+  font-size: 11px;
+  color: var(--muted);
+  margin-top: 2px;
+  font-weight: 400;
+}
+
+.card-desc {
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.6;
+  flex: 1;
+  margin-bottom: 14px;
+}
+
+/* File row */
+.card-file-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--chip-bg);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  padding: 6px 10px;
+  margin-bottom: 12px;
+}
+
+.file-icon svg {
+  width: 15px;
+  height: 15px;
+  fill: none;
+  stroke: var(--blue);
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  flex-shrink: 0;
+  display: block;
+}
+
+.file-name {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--blue);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-family: 'Oswald', sans-serif;
+  letter-spacing: 0.3px;
+  flex: 1;
+  min-width: 0;
+}
+
+.file-format-tag {
+  font-family: 'Oswald', sans-serif;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 2px;
+  letter-spacing: 0.5px;
+  flex-shrink: 0;
+}
+
+.fmt-csv  { background: #e5f5e0; color: #2b7a2b; border: 1px solid #b2d9b2; }
+.fmt-xlsx { background: #e5f5e0; color: #1a6b1a; border: 1px solid #96cc96; }
+
+/* Card footer */
+.card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 10px;
+  border-top: 1px solid var(--border2);
+}
+
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  font-family: 'Oswald', sans-serif;
+  color: var(--muted);
+}
+
+.status-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #ccc;
+}
+
+.status-dot.ready { background: var(--success); box-shadow: 0 0 0 2px var(--success-bg); }
+.status-dot.soon  { background: #f0a500; box-shadow: 0 0 0 2px #fff8e0; }
+
+.status-pill.ready { color: var(--success); }
+.status-pill.soon  { color: var(--warn); }
+
+/* Download button */
+.dl-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: 'Oswald', sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  color: var(--white);
+  background: var(--blue);
+  border: none;
+  border-radius: 3px;
+  padding: 6px 12px;
+  cursor: pointer;
+  transition: background 0.15s, transform 0.1s;
+  text-transform: uppercase;
+}
+
+.dl-btn:hover:not(:disabled) { background: var(--blue-light); }
+.dl-btn:active:not(:disabled) { transform: scale(0.97); }
+.dl-btn:disabled { background: var(--border); color: var(--muted); cursor: not-allowed; }
+
+.dl-btn svg {
+  width: 13px;
+  height: 13px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  flex-shrink: 0;
+}
+
+.dl-btn.flashing { background: var(--success) !important; animation: flashBtn 0.4s ease; }
+@keyframes flashBtn { 0%{transform:scale(1)} 30%{transform:scale(1.06)} 100%{transform:scale(1)} }
+
+/* ── TOAST ── */
+.toast-container {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  pointer-events: none;
+}
+
+.toast {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--blue-dark);
+  color: white;
+  border-left: 4px solid rgba(255,255,255,0.4);
+  padding: 12px 16px;
+  border-radius: 4px;
+  font-size: 13px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.25);
+  pointer-events: all;
+  animation: toastIn 0.3s ease;
+  min-width: 260px;
+  max-width: 360px;
+}
+
+.toast.success { border-left-color: #28a745; }
+.toast.error   { border-left-color: #dc3545; }
+
+@keyframes toastIn  { from{opacity:0;transform:translateX(40px)} to{opacity:1;transform:translateX(0)} }
+@keyframes toastOut { from{opacity:1;transform:translateX(0)} to{opacity:0;transform:translateX(40px)} }
+
+.toast-icon svg { width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0; }
+.toast.success .toast-icon svg { stroke:#28a745; }
+.toast-title { font-weight:700;font-size:12px;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:2px;font-family:'Oswald',sans-serif; }
+.toast-text { flex:1;line-height:1.4; }
+
+/* ── FOOTER ── */
+.page-footer {
+  background: var(--blue);
+  border-top: 3px solid rgba(255,255,255,0.2);
+  padding: 14px 28px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 11px;
+  color: rgba(255,255,255,0.6);
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.page-footer strong {
+  color: var(--white);
+  font-family: 'Oswald', sans-serif;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+
+@media(max-width: 1100px) {
+  .cards-grid { grid-template-columns: repeat(3, 1fr); }
+}
+@media(max-width: 768px) {
+  .main { padding: 16px 14px 28px; }
+  .subheader { padding: 12px 16px 14px; flex-direction: column; align-items: flex-start; }
+  .subheader-right { align-items: flex-start; }
+  .year-toggle-wrap { justify-content: flex-start; }
+  .cards-grid { grid-template-columns: repeat(2, 1fr); }
+  .page-footer { justify-content: center; text-align: center; }
+}
+@media(max-width: 480px) {
+  .cards-grid { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="topbar-logo"><span>DDH</span></div>
+  <div class="topbar-divider"></div>
+  <div class="topbar-title">Validated Routine Malaria Data Elements</div>
+  <div class="topbar-badge">Sierra Leone · NMCP</div>
+</div>
+
+<!-- SUBHEADER -->
+<div class="subheader">
+  <div class="subheader-left">
+    <h1>District Data Download</h1>
+    <div class="meta-chips">
+      <div class="meta-chip">Sierra Leone</div>
+      <div class="meta-chip">16 Districts</div>
+      <div class="meta-chip">Routine HMIS</div>
+    </div>
+  </div>
+  <div class="subheader-right">
+    <div class="subheader-stats">
+      <div class="stat-block">
+        <span class="stat-value" id="readyCount">—</span>
+        <span class="stat-label">Ready</span>
+      </div>
+      <div class="stat-block">
+        <span class="stat-value">16</span>
+        <span class="stat-label">Districts</span>
+      </div>
+    </div>
+    <!-- YEAR TOGGLE -->
+    <div class="year-toggle-wrap" id="yearToggle">
+      <span class="year-toggle-label">Year:</span>
+    </div>
+  </div>
+</div>
+
+<!-- MAIN -->
+<main class="main">
+  <div class="section-label">Districts — <span class="yr-highlight" id="sectionYear">2024</span></div>
+  <div class="cards-grid" id="cardsGrid"></div>
+</main>
+
+<!-- FOOTER -->
+<footer class="page-footer">
+  <div>Validated Routine Malaria Data Elements — <strong>16 Districts, Sierra Leone</strong></div>
+  <div>Designed &amp; Developed by <strong>Informatics Consultancy Firm (ICF-SL)</strong> &nbsp;|&nbsp; &copy; <span id="footerYear"></span></div>
+</footer>
+
+<div class="toast-container" id="toastContainer"></div>
+
+<script>
+  document.getElementById('footerYear').textContent = new Date().getFullYear();
+
+  // ═══════════════════════════════════════════════════════════
+  //  DISTRICTS — 16 Sierra Leone districts
+  //  For each district, set `urls` keyed by year (string).
+  //  Leave a year key out or set "" to mark it Coming Soon.
+  //  `filename` supports {year} placeholder.
+  // ═══════════════════════════════════════════════════════════
+  var districts = [
+    { id:1,  name:"Bo",                  region:"Southern Province",  filename:"bo_validated_routine_{year}.csv",             urls:{} },
+    { id:2,  name:"Bonthe",              region:"Southern Province",  filename:"bonthe_validated_routine_{year}.csv",         urls:{} },
+    { id:3,  name:"Moyamba",             region:"Southern Province",  filename:"moyamba_validated_routine_{year}.csv",        urls:{} },
+    { id:4,  name:"Pujehun",             region:"Southern Province",  filename:"pujehun_validated_routine_{year}.csv",        urls:{} },
+    { id:5,  name:"Kenema",              region:"Eastern Province",   filename:"kenema_validated_routine_{year}.csv",         urls:{} },
+    { id:6,  name:"Kailahun",            region:"Eastern Province",   filename:"kailahun_validated_routine_{year}.csv",       urls:{} },
+    { id:7,  name:"Kono",                region:"Eastern Province",   filename:"kono_validated_routine_{year}.csv",           urls:{} },
+    { id:8,  name:"Bombali",             region:"Northern Province",  filename:"bombali_validated_routine_{year}.csv",        urls:{} },
+    { id:9,  name:"Falaba",              region:"Northern Province",  filename:"falaba_validated_routine_{year}.csv",         urls:{} },
+    { id:10, name:"Koinadugu",           region:"Northern Province",  filename:"koinadugu_validated_routine_{year}.csv",      urls:{} },
+    { id:11, name:"Tonkolili",           region:"Northern Province",  filename:"tonkolili_validated_routine_{year}.csv",      urls:{} },
+    { id:12, name:"Kambia",              region:"North West Province",filename:"kambia_validated_routine_{year}.csv",         urls:{} },
+    { id:13, name:"Karene",              region:"North West Province",filename:"karene_validated_routine_{year}.csv",         urls:{} },
+    { id:14, name:"Port Loko",           region:"North West Province",filename:"port_loko_validated_routine_{year}.csv",      urls:{} },
+    { id:15, name:"Western Area Urban",  region:"Western Area",       filename:"western_urban_validated_routine_{year}.csv",  urls:{} },
+    { id:16, name:"Western Area Rural",  region:"Western Area",       filename:"Western_Area_Rural_District_{year}.xls",     urls:{"2015":"https://raw.githubusercontent.com/mohamedsillahkanu/student-training/e1a317edbff916fe51512e28cdf4766a7a8bfafd/Routine%20Data/Western_Area_Rural_District_2015-2023%20(1).xls"} }
+  ];
+
+  var YEARS = ['2015','2016','2017','2018','2019','2020','2021','2022','2023','2024','2025'];
+  var activeYear = '2015';
+
+  // ── SVG snippets ──
+  var svgDl    = '<svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7,10 12,15 17,10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>';
+  var svgCheck = '<svg viewBox="0 0 24 24"><polyline points="20,6 9,17 4,12"/></svg>';
+  var svgFile  = '<svg viewBox="0 0 24 24"><path d="M13 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V9z"/><polyline points="13,2 13,9 20,9"/></svg>';
+  var svgMap   = '<svg viewBox="0 0 24 24"><polygon points="1,6 1,22 8,18 16,22 23,18 23,2 16,6 8,2"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg>';
+
+  function has(v) { return v && v.trim().length > 0; }
+
+  function getUrl(d, year) {
+    return (d.urls && d.urls[year]) ? d.urls[year] : '';
+  }
+
+  function getFilename(d, year) {
+    return d.filename.indexOf('{year}') !== -1 ? d.filename.replace('{year}', year) : d.filename;
+  }
+
+  // ── Build year toggle ──
+  var toggleWrap = document.getElementById('yearToggle');
+  YEARS.forEach(function(yr) {
+    var btn = document.createElement('button');
+    btn.className = 'yr-btn' + (yr === activeYear ? ' active' : '');
+    btn.textContent = yr;
+    btn.onclick = function() { setYear(yr); };
+    toggleWrap.appendChild(btn);
+  });
+
+  function setYear(yr) {
+    activeYear = yr;
+    document.getElementById('sectionYear').textContent = yr;
+    // Update toggle active state
+    toggleWrap.querySelectorAll('.yr-btn').forEach(function(b) {
+      b.classList.toggle('active', b.textContent === yr);
+    });
+    renderCards();
+  }
+
+  // ── Render cards ──
+  function renderCards() {
+    var grid = document.getElementById('cardsGrid');
+    grid.innerHTML = districts.map(function(d, i) {
+      var url      = getUrl(d, activeYear);
+      var filename = getFilename(d, activeYear);
+      var ready    = has(url);
+
+      var fileInfo = '<div class="card-file-info">' +
+        '<div class="file-icon">' + svgFile + '</div>' +
+        '<div class="file-name">' + filename + '</div>' +
+        '<span class="file-format-tag fmt-' + (d.format||'csv') + '">' + (d.format||'csv').toUpperCase() + '</span>' +
+      '</div>';
+
+      var status = ready
+        ? '<div class="status-pill ready"><div class="status-dot ready"></div>Ready</div>'
+        : '<div class="status-pill soon"><div class="status-dot soon"></div>Coming Soon</div>';
+
+      var btn = ready
+        ? '<button class="dl-btn" id="dlbtn-' + i + '" onclick="downloadFile(' + i + ')">' + svgDl + ' Download</button>'
+        : '<button class="dl-btn" disabled>' + svgDl + ' N/A</button>';
+
+      return '<div class="card" style="animation-delay:' + (i * 0.04).toFixed(2) + 's">' +
+        '<div class="card-stripe-outer"></div>' +
+        '<div class="card-stripe-inner"></div>' +
+        '<div class="card-body">' +
+          '<div class="card-header-row">' +
+            '<div class="card-icon">' + svgMap + '</div>' +
+            '<div class="card-title-wrap">' +
+              '<div class="card-num">DISTRICT ' + String(d.id).padStart(2,'0') + '</div>' +
+              '<div class="card-name">' + d.name + '</div>' +
+              '<div class="card-region">' + d.region + '</div>' +
+            '</div>' +
+          '</div>' +
+          '<div class="card-desc">Clean routine malaria data elements — ' + activeYear + '.</div>' +
+          fileInfo +
+          '<div class="card-footer">' + status + btn + '</div>' +
+        '</div>' +
+      '</div>';
+    }).join('');
+
+    // Update ready count
+    var readyN = districts.filter(function(d) { return has(getUrl(d, activeYear)); }).length;
+    document.getElementById('readyCount').textContent = readyN;
+  }
+
+  // ── Download ──
+  function downloadFile(idx) {
+    var d        = districts[idx];
+    var url      = getUrl(d, activeYear);
+    var filename = getFilename(d, activeYear);
+    var btn      = document.getElementById('dlbtn-' + idx);
+    if (!has(url)) return;
+
+    btn.classList.add('flashing');
+    btn.innerHTML = svgCheck + ' Downloading…';
+    btn.disabled = true;
+
+    fetch(url)
+      .then(function(res) { return res.blob(); })
+      .then(function(blob) {
+        var blobUrl = URL.createObjectURL(blob);
+        var a = document.createElement('a');
+        a.href     = blobUrl;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        setTimeout(function() { URL.revokeObjectURL(blobUrl); }, 1000);
+        showToast('success', 'Download Complete', '<strong>' + filename + '</strong> — saved to your downloads folder.');
+      })
+      .catch(function() {
+        showToast('error', 'Download Failed', 'Could not fetch the file. Check the URL or network.');
+      })
+      .finally(function() {
+        setTimeout(function() {
+          btn.classList.remove('flashing');
+          btn.innerHTML = svgDl + ' Download';
+          btn.disabled = false;
+        }, 1800);
+      });
+  }
+
+  // ── Toast ──
+  function showToast(type, title, msg) {
+    var svg = type === 'success'
+      ? '<svg viewBox="0 0 24 24"><polyline points="20,6 9,17 4,12"/></svg>'
+      : '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>';
+    var el = document.createElement('div');
+    el.className = 'toast ' + type;
+    el.innerHTML = '<div class="toast-icon">' + svg + '</div><div class="toast-text"><div class="toast-title">' + title + '</div>' + msg + '</div>';
+    document.getElementById('toastContainer').appendChild(el);
+    setTimeout(function() {
+      el.style.animation = 'toastOut 0.3s ease forwards';
+      setTimeout(function() { el.remove(); }, 320);
+    }, 4000);
+  }
+
+  // ── DHIS2 resize ──
+  function notifyParentHeight() {
+    var h = document.documentElement.scrollHeight || document.body.scrollHeight;
+    if (window.parent !== window) {
+      window.parent.postMessage({ type:'resizePlugin', height:h }, '*');
+      window.parent.postMessage(JSON.stringify({ type:'resizePlugin', height:h }), '*');
+    }
+  }
+  notifyParentHeight();
+  window.addEventListener('load', notifyParentHeight);
+  window.addEventListener('resize', notifyParentHeight);
+  if (window.ResizeObserver) new ResizeObserver(notifyParentHeight).observe(document.body);
+  setInterval(notifyParentHeight, 1000);
+
+  // ── Init ──
+  renderCards();
+</script>
+</body>
+</html>
